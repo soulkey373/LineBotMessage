@@ -7,10 +7,10 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["LineBotMessage/LineBotMessage.csproj", "LineBotMessage/"]
-RUN dotnet restore "LineBotMessage/LineBotMessage.csproj"
+COPY ["LineBotMessage.csproj", "."]
+RUN dotnet restore "./LineBotMessage.csproj"
 COPY . .
-WORKDIR "/src/LineBotMessage"
+WORKDIR "/src/."
 RUN dotnet build "LineBotMessage.csproj" -c Release -o /app/build
 
 FROM build AS publish

@@ -1,0 +1,7 @@
+﻿version: '3'
+services:
+  aspnetcore-in-docker:
+    image: linebotmessage
+    container_name: linebotmessage
+    ports:
+      - 5000:80
