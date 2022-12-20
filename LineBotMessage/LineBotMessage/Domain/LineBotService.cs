@@ -5,6 +5,7 @@ using LineBotMessage.Providers;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Web;
 
 namespace LineBotMessage.Domain
 {
@@ -26,27 +27,69 @@ namespace LineBotMessage.Domain
 
         public async void ReceiveWebhook(WebhookRequestBodyDto requestBody)
         {
-            foreach (WebhookEventDto eventObject in requestBody.Events)
+            foreach (var eventObject in requestBody.Events)
             {
-                if (!String.IsNullOrEmpty(eventObject.Message.Text))
+                switch (eventObject.Type)
                 {
-                    if (eventObject.Message.Text == "天氣")
-                    {
-                        String Weather_Conditions = await GetWeather("新竹市");
-                        Task.WaitAll();
-                        var replyMessage = new ReplyMessageRequestDto<TextMessageDto>()
+                    case WebhookEventTypeEnum.Message:
+                        ReplyMessageRequestDto<TextMessageDto>? replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+                        replyMessage.ReplyToken = eventObject.ReplyToken;
+                        replyMessage.Messages = new List<TextMessageDto>();
+                        TextMessageDto textMessage  =new TextMessageDto();
+                        if(eventObject.Message.Text!=""&& eventObject.Message.Text != null)
                         {
-                            ReplyToken = eventObject.ReplyToken,
-                            Messages = new List<TextMessageDto>
+                            if (eventObject.Message.Text.Trim() == "天氣")
                             {
-                                new TextMessageDto(){Text = Weather_Conditions}
+                                string result = await GetWeather();
+                                textMessage.Text = result;
                             }
-                        };
+                        }
+                        else
+                        {
+                            textMessage.Text = eventObject.Message.Text;
+                        }
+                        replyMessage.Messages.Add(textMessage);
+                    
                         ReplyMessageHandler("text", replyMessage);
-
-                    }
+                        break;
+                    case WebhookEventTypeEnum.Unsend:
+                        Console.WriteLine($"使用者{eventObject.Source.UserId}在聊天室收回訊息！");
+                        break;
+                    case WebhookEventTypeEnum.Follow:
+                        Console.WriteLine($"使用者{eventObject.Source.UserId}將我們新增為好友！");
+                        break;
+                    case WebhookEventTypeEnum.Unfollow:
+                        Console.WriteLine($"使用者{eventObject.Source.UserId}封鎖了我們！");
+                        break;
+                    case WebhookEventTypeEnum.Join:
+                        Console.WriteLine("我們被邀請進入聊天室了！");
+                        break;
+                    case WebhookEventTypeEnum.Leave:
+                        Console.WriteLine("我們被聊天室踢出了");
+                        break;
+                    case WebhookEventTypeEnum.MemberJoined:
+                        string joinedMemberIds = "";
+                        foreach (var member in eventObject.Joined.Members)
+                        {
+                            joinedMemberIds += $"{member.UserId} ";
+                        }
+                        Console.WriteLine($"使用者{joinedMemberIds}加入了群組！");
+                        break;
+                    case WebhookEventTypeEnum.MemberLeft:
+                        string leftMemberIds = "";
+                        foreach (var member in eventObject.Left.Members)
+                        {
+                            leftMemberIds += $"{member.UserId} ";
+                        }
+                        Console.WriteLine($"使用者{leftMemberIds}離開了群組！");
+                        break;
+                    case WebhookEventTypeEnum.Postback:
+                        Console.WriteLine($"使用者{eventObject.Source.UserId}觸發了postback事件");
+                        break;
+                    case WebhookEventTypeEnum.VideoPlayComplete:
+                        Console.WriteLine($"使用者{eventObject.Source.UserId}");
+                        break;
                 }
-
             }
         }
 
@@ -82,21 +125,23 @@ namespace LineBotMessage.Domain
 
                 HttpResponseMessage response = await client.SendAsync(requestMessage);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine("回復訊息失敗!\n"+ ex.ToString());
-            }           
+                Console.WriteLine("回復訊息失敗!\n" + ex.ToString());
+            }
 
         }
-        static async Task<string> GetWeather(string location)
+        static async Task<string> GetWeather()
         {
             try
             {
-                string WeatherCode = "CWB-99A47F28-FFB9-467F-B4E9-6972DDCF3CD6";
-                string result="";
-                string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization={WeatherCode}" + "&" + "locationName=" + $"{location}";
+                string result = "";
+                string local = "新竹市";
+                string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?format=JSON&locationName={local}";
+                client.DefaultRequestHeaders.Authorization =new AuthenticationHeaderValue( "CWB-99A47F28-FFB9-467F-B4E9-6972DDCF3CD6");
                 using HttpResponseMessage response = await client.GetAsync(Path);
-                Task.WaitAll();
+                Console.WriteLine(response.ToString());
+               
                 if (response.IsSuccessStatusCode == true)
                 {
                     response.EnsureSuccessStatusCode();
@@ -112,12 +157,12 @@ namespace LineBotMessage.Domain
                                                            Environment.NewLine + $"最低溫度:{responseBodyJsonParse.records.location[0].weatherElement[2].time[0].parameter.parameterName}" + "°C" +
                                                            Environment.NewLine + $"最高溫度:{responseBodyJsonParse.records.location[0].weatherElement[4].time[0].parameter.parameterName}" + "°C" +
                                                            Environment.NewLine + $"天氣舒適度:{responseBodyJsonParse.records.location[0].weatherElement[3].time[0].parameter.parameterName}";
-                    Console.WriteLine("抓取天氣成功!");
-                   
+                    Console.WriteLine("抓取天氣API成功!");
+
                 }
-                else if(response.IsSuccessStatusCode == false)
+                else if (response.IsSuccessStatusCode == false)
                 {
-                    Console.WriteLine("response.IsSuccessStatusCode==False");
+                    Console.WriteLine("抓取天氣API失敗!");
                     return result;
                 }
                 return result;
