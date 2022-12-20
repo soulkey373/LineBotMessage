@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Web;
+using Microsoft.AspNetCore.Mvc.Diagnostics;
+using LineBotMessage.Dtos.Messages;
 
 namespace LineBotMessage.Domain
 {
@@ -32,18 +34,27 @@ namespace LineBotMessage.Domain
                 switch (eventObject.Type)
                 {
                     case WebhookEventTypeEnum.Message:
-                        ReplyMessageRequestDto<TextMessageDto>? replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+                        ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
                         replyMessage.ReplyToken = eventObject.ReplyToken;
                         replyMessage.Messages = new List<TextMessageDto>();
                         TextMessageDto textMessage  =new TextMessageDto();
                         if(eventObject.Message.Text!=""&& eventObject.Message.Text != null)
                         {
+                            #region 當使用者鍵入"天氣時"
                             if (eventObject.Message.Text.Trim() == "天氣")
                             {
                                 string result = await GetWeather();
                                 textMessage.Text = result;
                             }
-                        }
+                            #endregion
+
+                            #region 當使用者鍵入"Carousel"
+                            if (eventObject.Message.Text == "Carousel")
+                            {
+                                
+                            }
+                                #endregion
+                            }
                         else
                         {
                             textMessage.Text = eventObject.Message.Text;
