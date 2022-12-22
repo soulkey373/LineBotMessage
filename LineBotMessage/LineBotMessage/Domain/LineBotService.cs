@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using System.Web;
 using Microsoft.AspNetCore.Mvc.Diagnostics;
 using LineBotMessage.Dtos.Messages;
+using static LineBotMessage.Dtos.BaseMessageDto;
 
 namespace LineBotMessage.Domain
 {
@@ -29,13 +30,15 @@ namespace LineBotMessage.Domain
 
         public async void ReceiveWebhook(WebhookRequestBodyDto requestBody)
         {
+            string strBody = requestBody.ToString();
+            dynamic messageRequest = new BroadcastMessageRequestDto<BaseMessageDto>();
             foreach (var eventObject in requestBody.Events)
             {
                 switch (eventObject.Type)
                 {
                     case WebhookEventTypeEnum.Message:
                         if (eventObject.Message.Type == MessageTypeEnum.Text)
-                            ReceiveMessageWebhookEvent(eventObject);
+                            await ReceiveMessageWebhookEvent(eventObject);
                         break;
                     case WebhookEventTypeEnum.Unsend:
                         Console.WriteLine($"使用者{eventObject.Source.UserId}在聊天室收回訊息！");
@@ -74,6 +77,9 @@ namespace LineBotMessage.Domain
                     case WebhookEventTypeEnum.VideoPlayComplete:
                         Console.WriteLine($"使用者{eventObject.Source.UserId}");
                         break;
+                    case MessageTypeEnum.Location:
+                        messageRequest = _jsonProvider.Deserialize<BroadcastMessageRequestDto<LocationMesssageDto>>(strBody);
+                        break;
                 }
             }
         }
@@ -88,12 +94,15 @@ namespace LineBotMessage.Domain
             #endregion
 
             #region Carousel回復
-            ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>> replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>>();
-            replyMessage1.ReplyToken = eventObject.ReplyToken;
-            replyMessage1.Messages = new List<TemplateMessageDto<CarouselTemplateDto>>();
-            TemplateMessageDto<CarouselTemplateDto> templateMessage = new TemplateMessageDto<CarouselTemplateDto>();
+            //ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>> replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>>();
+            //replyMessage1.ReplyToken = eventObject.ReplyToken;
+            //replyMessage1.Messages = new List<TemplateMessageDto<CarouselTemplateDto>>();
+            //TemplateMessageDto<CarouselTemplateDto> templateMessage = new TemplateMessageDto<CarouselTemplateDto>();
             #endregion
 
+            #region Quick Reply 快速回復
+            dynamic replyMessage = new ReplyMessageRequestDto<BaseMessageDto>();
+            #endregion
             if (eventObject.Message.Text != "" && eventObject.Message.Text != null)
             {
                 #region 當使用者鍵入"天氣時"
@@ -105,217 +114,256 @@ namespace LineBotMessage.Domain
                 #endregion
 
                 #region 當使用者鍵入"天氣"Carousel 型態
-                if (eventObject.Message.Text.Contains("天氣 "))
+                //if (eventObject.Message.Text.Contains("天氣 "))
+                //{
+                //    string Keyword = eventObject.Message.Text.Substring(3);//天氣空格=第三個字元開始
+                //    List<CarouselColumnObjectDto>? result = new List<CarouselColumnObjectDto>();
+                //    result = await GetWeatherCarousel(Keyword.Replace('台', '臺'));
+
+                //    Task.WaitAll();
+                //    templateMessage.AltText = "新竹市未來 36 小時天氣預測";
+                //    templateMessage.Template = new CarouselTemplateDto();
+                //    templateMessage.Template.Columns = new List<CarouselColumnObjectDto>
+                //                                           {
+
+                //        new CarouselColumnObjectDto
+                //        {
+                //            ThumbnailImageUrl = "https://obs.line-scdn.net/0huvyHSG7HKllEMTykfhpVDn1nKTZ3XTlaIAd7WgdfdG5oCT0NflE3b2cxdDlvA20HKgBjOGl0dTw8BmlbfwU/w644",
+                //            Title = result[0].Title.ToString(),
+                //            Text =  result[0].Text.ToString(),
+                //            Actions = new List<ActionDto>
+                //            {
+                //                //按鈕 action
+                //                new ActionDto
+                //                {
+                //                    Type = ActionTypeEnum.Location,
+                //                    Label ="詳細天氣資訊",
+                //                    Uri = "https://www.apple.com/tw/iphone-14-pro/?afid=p238%7Cs2W650oa9-dc_mtid_2092576n66464_pcrid_620529299490_pgrid_144614079327_&cid=wwa-tw-kwgo-iphone-slid---productid--Brand-iPhone14Pro-Announce-"
+                //                }
+                //            }
+                //        },
+                //        new CarouselColumnObjectDto
+                //        {
+                //            ThumbnailImageUrl = "https://truth.bahamut.com.tw/s01/202112/3e2f4ddb0738d88f8f08492f7a7e2c79.JPG",
+                //            Title = result[1].Title.ToString(),
+                //            Text =  result[1].Text.ToString(),
+                //            Actions = new List<ActionDto>
+                //            {
+                //                //按鈕 action
+                //                new ActionDto
+                //                {
+                //                    Type = ActionTypeEnum.Uri,
+                //                    Label ="詳細天氣資訊",
+                //                    Uri = "https://www.cwb.gov.tw/V8/C/W/County/index.html"
+                //                }
+                //            }
+                //        },
+                //        new CarouselColumnObjectDto
+                //        {
+                //            ThumbnailImageUrl = "https://pbs.twimg.com/media/FkRM6TOaEAE9CLr?format=jpg&name=large",
+                //            Title = result[2].Title.ToString(),
+                //            Text =  result[2].Text.ToString(),
+                //            Actions = new List<ActionDto>
+                //            {
+                //                //按鈕 action
+                //                new ActionDto
+                //                {
+                //                    Type = ActionTypeEnum.Uri,
+                //                    Label ="詳細天氣資訊",
+                //                    Uri = "https://www.cwb.gov.tw/V8/C/W/County/index.html"
+                //                }
+                //            }
+                //        }
+                //                                            };
+
+                //}
+                #endregion
+
+                #region 當使用者鍵入"測試快速回復"
+
+                if (eventObject.Message.Text.Contains("測試快速回復"))
                 {
-                    string Keyword = eventObject.Message.Text.Substring(3);
-                    List<CarouselColumnObjectDto>? result = new List<CarouselColumnObjectDto>();
-                    result = await GetWeatherCarousel(Keyword.Replace('台', '臺'));
-
-                    Task.WaitAll();
-                    templateMessage.AltText = "新竹市未來 36 小時天氣預測";
-                    templateMessage.Template = new CarouselTemplateDto();
-                    templateMessage.Template.Columns = new List<CarouselColumnObjectDto>
-                                                           {
-
-                        new CarouselColumnObjectDto
+                    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                    {
+                        ReplyToken = eventObject.ReplyToken,
+                        Messages = new List<TextMessageDto>
                         {
-                            ThumbnailImageUrl = "https://obs.line-scdn.net/0huvyHSG7HKllEMTykfhpVDn1nKTZ3XTlaIAd7WgdfdG5oCT0NflE3b2cxdDlvA20HKgBjOGl0dTw8BmlbfwU/w644",
-                            Title = result[0].Title.ToString(),
-                            Text =  result[0].Text.ToString(),
-                            Actions = new List<ActionDto>
-                            {
-                                //按鈕 action
-                                new ActionDto
+                             new TextMessageDto
+                             {
+                                Text ="QuickReply 測試訊息",
+                                QuickReply = new QuickReplyItemDto
                                 {
-                                    Type = ActionTypeEnum.Uri,
-                                    Label ="詳細天氣資訊",
-                                    Uri = "https://www.apple.com/tw/iphone-14-pro/?afid=p238%7Cs2W650oa9-dc_mtid_2092576n66464_pcrid_620529299490_pgrid_144614079327_&cid=wwa-tw-kwgo-iphone-slid---productid--Brand-iPhone14Pro-Announce-"
+                                     Items = new List<QuickReplyButtonDto>
+                                     {
+                                         // message action
+                                            new QuickReplyButtonDto {
+                                                Action = new ActionDto {
+                                                    Type = ActionTypeEnum.Message,
+                                                    Label = "message 測試" ,
+                                                    Text = "測試"
+                                                }
+                                            },
+                                              // location action
+                                            new QuickReplyButtonDto {
+                                                Action = new ActionDto {
+                                                    Type = ActionTypeEnum.Location,
+                                                    Label = "開啟位置"
+                                                }
+                                            }
+                                     }
                                 }
-                            }
-                        },
-                        new CarouselColumnObjectDto
-                        {
-                            ThumbnailImageUrl = "https://truth.bahamut.com.tw/s01/202112/3e2f4ddb0738d88f8f08492f7a7e2c79.JPG",
-                            Title = result[0].Title.ToString(),
-                            Text =  result[0].Text.ToString(),
-                            Actions = new List<ActionDto>
-                            {
-                                //按鈕 action
-                                new ActionDto
-                                {
-                                    Type = ActionTypeEnum.Uri,
-                                    Label ="詳細天氣資訊",
-                                    Uri = "https://www.cwb.gov.tw/V8/C/W/County/index.html"
-                                }
-                            }
-                        },
-                        new CarouselColumnObjectDto
-                        {
-                            ThumbnailImageUrl = "https://pbs.twimg.com/media/FkRM6TOaEAE9CLr?format=jpg&name=large",
-                            Title = result[0].Title.ToString(),
-                            Text =  result[0].Text.ToString(),
-                            Actions = new List<ActionDto>
-                            {
-                                //按鈕 action
-                                new ActionDto
-                                {
-                                    Type = ActionTypeEnum.Uri,
-                                    Label ="詳細天氣資訊",
-                                    Uri = "https://www.cwb.gov.tw/V8/C/W/County/index.html"
-                                }
-                            }
+                             }
                         }
-                                                            };
+                    };
 
                 }
                 #endregion
-
+                //else
+                //{
+                //    textMessage.Text = eventObject.Message.Text;
+                //}
+                //replyMessage.Messages.Add(textMessage);
+                //replyMessage1.Messages.Add(templateMessage);
+                ReplyMessageHandler(replyMessage);
             }
-            //else
-            //{
-            //    textMessage.Text = eventObject.Message.Text;
-            //}
-            //replyMessage.Messages.Add(textMessage);
-            replyMessage1.Messages.Add(templateMessage);
-            ReplyMessageHandler("text", replyMessage1);
         }
 
 
-        /// <summary>
-        /// 接收到回覆請求時，在將請求傳至 Line 前多一層處理(目前為預留)
-        /// </summary>
-        /// <param name="messageType"></param>
-        /// <param name="requestBody"></param>
-        public void ReplyMessageHandler<T>(string messageType, ReplyMessageRequestDto<T> requestBody)
-        {
-            ReplyMessage(requestBody);
-        }
-
-        /// <summary>
-        /// 將回覆訊息請求送到 Line
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="request"></param>
-        public async void ReplyMessage<T>(ReplyMessageRequestDto<T> request)
-        {
-
-            try
+            /// <summary>
+            /// 接收到回覆請求時，在將請求傳至 Line 前多一層處理(目前為預留)
+            /// </summary>
+            /// <param name="messageType"></param>
+            /// <param name="requestBody"></param>
+            public void ReplyMessageHandler<T>( ReplyMessageRequestDto<T> requestBody)
             {
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", channelAccessToken); //帶入 channel access token
-                string? json = _jsonProvider.Serialize(request);
-                HttpRequestMessage? requestMessage = new HttpRequestMessage
+                ReplyMessage(requestBody);
+            }
+
+            /// <summary>
+            /// 將回覆訊息請求送到 Line
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="request"></param>
+            public async void ReplyMessage<T>(ReplyMessageRequestDto<T> request)
+            {
+
+                try
                 {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri(replyMessageUri),
-                    Content = new StringContent(json, Encoding.UTF8, "application/json")
-                };
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", channelAccessToken); //帶入 channel access token
+                    string? json = _jsonProvider.Serialize(request);
+                    HttpRequestMessage? requestMessage = new HttpRequestMessage
+                    {
+                        Method = HttpMethod.Post,
+                        RequestUri = new Uri(replyMessageUri),
+                        Content = new StringContent(json, Encoding.UTF8, "application/json")
+                    };
 
-                HttpResponseMessage response = await client.SendAsync(requestMessage);
-                Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("回復訊息失敗!\n" + ex.ToString());
-            }
-
-        }
-        static async Task<string> GetWeather()
-        {
-            try
-            {
-                string result = "";
-                string local = "新竹市";
-                string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?format=JSON&locationName={local}";
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("CWB-99A47F28-FFB9-467F-B4E9-6972DDCF3CD6");
-                using HttpResponseMessage response = await client.GetAsync(Path);
-                Console.WriteLine(response.ToString());
-
-                if (response.IsSuccessStatusCode == true)
-                {
-                    response.EnsureSuccessStatusCode();
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    WeatherReturn responseBodyJsonParse = JsonConvert.DeserializeObject<WeatherReturn>(responseBody);
-                    var StartTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[1].startTime).ToString("yyyy  MM / dd dddd HH:mm");
-                    var EndTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[1].endTime).ToString("yyyy  MM / dd dddd HH:mm");
-                    result = "新竹市12小時天氣預報" +
-                                                           Environment.NewLine + $"{StartTime}" +
-                                                           Environment.NewLine + $"{EndTime}" +
-                                                           Environment.NewLine + $"天氣狀態:{responseBodyJsonParse.records.location[0].weatherElement[0].time[0].parameter.parameterName}" +
-                                                           Environment.NewLine + $"降雨機率:{responseBodyJsonParse.records.location[0].weatherElement[1].time[0].parameter.parameterName}" + "%" +
-                                                           Environment.NewLine + $"最低溫度:{responseBodyJsonParse.records.location[0].weatherElement[2].time[0].parameter.parameterName}" + "°C" +
-                                                           Environment.NewLine + $"最高溫度:{responseBodyJsonParse.records.location[0].weatherElement[4].time[0].parameter.parameterName}" + "°C" +
-                                                           Environment.NewLine + $"天氣舒適度:{responseBodyJsonParse.records.location[0].weatherElement[3].time[0].parameter.parameterName}";
-                    Console.WriteLine("抓取天氣API成功!");
-
+                    HttpResponseMessage response = await client.SendAsync(requestMessage);
+                    Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
                 }
-                else if (response.IsSuccessStatusCode == false)
+                catch (Exception ex)
                 {
-                    Console.WriteLine("抓取天氣API失敗!");
+                    Console.WriteLine("回復訊息失敗!\n" + ex.ToString());
+                }
+
+            }
+            static async Task<string> GetWeather()
+            {
+                try
+                {
+                    string result = "";
+                    string local = "新竹市";
+                    string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?format=JSON&locationName={local}";
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("CWB-99A47F28-FFB9-467F-B4E9-6972DDCF3CD6");
+                    using HttpResponseMessage response = await client.GetAsync(Path);
+                    Console.WriteLine(response.ToString());
+
+                    if (response.IsSuccessStatusCode == true)
+                    {
+                        response.EnsureSuccessStatusCode();
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        WeatherReturn responseBodyJsonParse = JsonConvert.DeserializeObject<WeatherReturn>(responseBody);
+                        var StartTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[1].startTime).ToString("yyyy  MM / dd dddd HH:mm");
+                        var EndTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[1].endTime).ToString("yyyy  MM / dd dddd HH:mm");
+                        result = "新竹市12小時天氣預報" +
+                                                               Environment.NewLine + $"{StartTime}" +
+                                                               Environment.NewLine + $"{EndTime}" +
+                                                               Environment.NewLine + $"天氣狀態:{responseBodyJsonParse.records.location[0].weatherElement[0].time[0].parameter.parameterName}" +
+                                                               Environment.NewLine + $"降雨機率:{responseBodyJsonParse.records.location[0].weatherElement[1].time[0].parameter.parameterName}" + "%" +
+                                                               Environment.NewLine + $"最低溫度:{responseBodyJsonParse.records.location[0].weatherElement[2].time[0].parameter.parameterName}" + "°C" +
+                                                               Environment.NewLine + $"最高溫度:{responseBodyJsonParse.records.location[0].weatherElement[4].time[0].parameter.parameterName}" + "°C" +
+                                                               Environment.NewLine + $"天氣舒適度:{responseBodyJsonParse.records.location[0].weatherElement[3].time[0].parameter.parameterName}";
+                        Console.WriteLine("抓取天氣API成功!");
+
+                    }
+                    else if (response.IsSuccessStatusCode == false)
+                    {
+                        Console.WriteLine("抓取天氣API失敗!");
+                        return result;
+                    }
                     return result;
                 }
-                return result;
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine("抓取天氣失敗!");
-                Console.WriteLine("Message :{0} ", e.Message.ToString());
-                return "";
-            }
-
-        }
-        static async Task<List<CarouselColumnObjectDto>> GetWeatherCarousel(string localname)
-        {
-            try
-            {
-                List<CarouselColumnObjectDto> carouselList = new List<CarouselColumnObjectDto>();
-
-                string result = "";
-                string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?format=JSON&locationName={localname}";
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("CWB-99A47F28-FFB9-467F-B4E9-6972DDCF3CD6");
-                using HttpResponseMessage response = await client.GetAsync(Path);
-                //Console.WriteLine(response.ToString());
-
-                if (response.IsSuccessStatusCode == true)
+                catch (HttpRequestException e)
                 {
-                    response.EnsureSuccessStatusCode();
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    WeatherReturn responseBodyJsonParse = JsonConvert.DeserializeObject<WeatherReturn>(responseBody);
-
-                    for (int number = 0; number < 3; number++)
-                    {
-                        CarouselColumnObjectDto carouselColumnObject = new CarouselColumnObjectDto();
-                        string? StartTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[number].startTime).ToString("MM/dd HH:mm");
-                        string? EndTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[number].endTime).ToString("MM/dd HH:mm");
-                        result = localname+":" +
-                                  Environment.NewLine + $"天氣狀態: {responseBodyJsonParse.records.location[0].weatherElement[0].time[number].parameter.parameterName}" +
-                                  Environment.NewLine + $"降雨機率: {responseBodyJsonParse.records.location[0].weatherElement[1].time[number].parameter.parameterName}" + "%" +
-                                  Environment.NewLine + $"最低溫度: {responseBodyJsonParse.records.location[0].weatherElement[2].time[number].parameter.parameterName}" + "°C" +
-                                  Environment.NewLine + $"最高溫度: {responseBodyJsonParse.records.location[0].weatherElement[4].time[number].parameter.parameterName}" + "°C" +
-                                  Environment.NewLine + $"舒適度: {responseBodyJsonParse.records.location[0].weatherElement[3].time[number].parameter.parameterName}";
-                        //Console.WriteLine("抓取天氣API成功!");
-                        carouselColumnObject.Title = StartTime + "~" + EndTime;
-                        carouselColumnObject.Text = result;
-                        carouselList.Add(carouselColumnObject);
-                    }
-
+                    Console.WriteLine("抓取天氣失敗!");
+                    Console.WriteLine("Message :{0} ", e.Message.ToString());
+                    return "";
                 }
-                else if (response.IsSuccessStatusCode == false)
+
+            }
+            static async Task<List<CarouselColumnObjectDto>> GetWeatherCarousel(string localname)
+            {
+                try
                 {
-                    Console.WriteLine("抓取天氣API失敗!");
+                    List<CarouselColumnObjectDto> carouselList = new List<CarouselColumnObjectDto>();
+
+                    string result = "";
+                    string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?format=JSON&locationName={localname}";
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("CWB-99A47F28-FFB9-467F-B4E9-6972DDCF3CD6");
+                    using HttpResponseMessage response = await client.GetAsync(Path);
+                    //Console.WriteLine(response.ToString());
+
+                    if (response.IsSuccessStatusCode == true)
+                    {
+                        response.EnsureSuccessStatusCode();
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        WeatherReturn responseBodyJsonParse = JsonConvert.DeserializeObject<WeatherReturn>(responseBody);
+
+                        for (int number = 0; number < 3; number++)
+                        {
+                            CarouselColumnObjectDto carouselColumnObject = new CarouselColumnObjectDto();
+                            string? StartTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[number].startTime).ToString("MM/dd HH:mm");
+                            string? EndTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[number].endTime).ToString("MM/dd HH:mm");
+                            result = localname + ":" +
+                                      Environment.NewLine + $"天氣狀態: {responseBodyJsonParse.records.location[0].weatherElement[0].time[number].parameter.parameterName}" +
+                                      Environment.NewLine + $"降雨機率: {responseBodyJsonParse.records.location[0].weatherElement[1].time[number].parameter.parameterName}" + "%" +
+                                      Environment.NewLine + $"最低溫度: {responseBodyJsonParse.records.location[0].weatherElement[2].time[number].parameter.parameterName}" + "°C" +
+                                      Environment.NewLine + $"最高溫度: {responseBodyJsonParse.records.location[0].weatherElement[4].time[number].parameter.parameterName}" + "°C" +
+                                      Environment.NewLine + $"舒適度: {responseBodyJsonParse.records.location[0].weatherElement[3].time[number].parameter.parameterName}";
+                            //Console.WriteLine("抓取天氣API成功!");
+                            carouselColumnObject.Title = StartTime + "~" + EndTime;
+                            carouselColumnObject.Text = result;
+                            carouselList.Add(carouselColumnObject);
+                        }
+
+                    }
+                    else if (response.IsSuccessStatusCode == false)
+                    {
+                        Console.WriteLine("抓取天氣API失敗!");
+                        return null;
+                    }
+                    return carouselList;
+                }
+                catch (HttpRequestException e)
+                {
+                    Console.WriteLine("抓取天氣失敗!");
+                    Console.WriteLine("Message :{0} ", e.Message.ToString());
                     return null;
                 }
-                return carouselList;
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine("抓取天氣失敗!");
-                Console.WriteLine("Message :{0} ", e.Message.ToString());
-                return null;
+
             }
 
         }
-
     }
-}
 
