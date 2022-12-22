@@ -108,12 +108,10 @@ namespace LineBotMessage.Domain
                 if (eventObject.Message.Text == "天氣")
                 {
                     //懶得設計
-                    CarouselColumnObjectDto? result1 = new CarouselColumnObjectDto();
-                    CarouselColumnObjectDto? result2 = new CarouselColumnObjectDto();
-                    CarouselColumnObjectDto? result3 = new CarouselColumnObjectDto();
-                    result1 = await GetWeatherCarousel(0);
-                    result2 = await GetWeatherCarousel(1);
-                    result3 = await GetWeatherCarousel(2);
+                    List<CarouselColumnObjectDto>? result = new List<CarouselColumnObjectDto>();
+
+                    result = await GetWeatherCarousel();
+
                     Task.WaitAll();
                     templateMessage.AltText = "新竹市未來 36 小時天氣預測";
                     templateMessage.Template = new CarouselTemplateDto();
@@ -123,8 +121,8 @@ namespace LineBotMessage.Domain
                                                                new CarouselColumnObjectDto
                         {
                             ThumbnailImageUrl = "https://obs.line-scdn.net/0huvyHSG7HKllEMTykfhpVDn1nKTZ3XTlaIAd7WgdfdG5oCT0NflE3b2cxdDlvA20HKgBjOGl0dTw8BmlbfwU/w644",
-                            Title = result1.Title.ToString(),
-                            Text =  result1.Text.ToString(),
+                            Title = result[0].Title.ToString(),
+                            Text =  result[0].Text.ToString(),
                             Actions = new List<ActionDto>
                             {
                                 //按鈕 action
@@ -139,8 +137,8 @@ namespace LineBotMessage.Domain
                                                                new CarouselColumnObjectDto
                         {
                             ThumbnailImageUrl = "https://truth.bahamut.com.tw/s01/202112/3e2f4ddb0738d88f8f08492f7a7e2c79.JPG",
-                            Title = result1.Title.ToString(),
-                            Text =  result1.Text.ToString(),
+                            Title = result[0].Title.ToString(),
+                            Text =  result[0].Text.ToString(),
                             Actions = new List<ActionDto>
                             {
                                 //按鈕 action
@@ -155,8 +153,8 @@ namespace LineBotMessage.Domain
                                                                new CarouselColumnObjectDto
                         {
                             ThumbnailImageUrl = "https://pbs.twimg.com/media/FkRM6TOaEAE9CLr?format=jpg&name=large",
-                            Title = result3.Title.ToString(),
-                            Text =  result3.Text.ToString(),
+                            Title = result[0].Title.ToString(),
+                            Text =  result[0].Text.ToString(),
                             Actions = new List<ActionDto>
                             {
                                 //按鈕 action
@@ -267,11 +265,12 @@ namespace LineBotMessage.Domain
             }
 
         }
-        static async Task<CarouselColumnObjectDto> GetWeatherCarousel(int number)
+        static async Task<List<CarouselColumnObjectDto>> GetWeatherCarousel()
         {
             try
             {
-                CarouselColumnObjectDto? carouselColumnObject = new CarouselColumnObjectDto();
+                List<CarouselColumnObjectDto> carouselList = new List<CarouselColumnObjectDto>();
+
                 string result = "";
                 string local = "新竹市";
                 string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?format=JSON&locationName={local}";
@@ -284,24 +283,31 @@ namespace LineBotMessage.Domain
                     response.EnsureSuccessStatusCode();
                     string responseBody = await response.Content.ReadAsStringAsync();
                     WeatherReturn responseBodyJsonParse = JsonConvert.DeserializeObject<WeatherReturn>(responseBody);
-                    var StartTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[number].startTime).ToString("MM/dd HH:mm");
-                    var EndTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[number].endTime).ToString("MM/dd HH:mm");
-                    result = "新竹市:" +
-                              Environment.NewLine + $"天氣狀態: {responseBodyJsonParse.records.location[0].weatherElement[0].time[number].parameter.parameterName}" +
-                              Environment.NewLine + $"降雨機率: {responseBodyJsonParse.records.location[0].weatherElement[1].time[number].parameter.parameterName}" + "%" +
-                              Environment.NewLine + $"最低溫度: {responseBodyJsonParse.records.location[0].weatherElement[2].time[number].parameter.parameterName}" + "°C" +
-                              Environment.NewLine + $"最高溫度: {responseBodyJsonParse.records.location[0].weatherElement[4].time[number].parameter.parameterName}" + "°C" +
-                              Environment.NewLine + $"舒適度: {responseBodyJsonParse.records.location[0].weatherElement[3].time[number].parameter.parameterName}";
-                    //Console.WriteLine("抓取天氣API成功!");
-                    carouselColumnObject.Title = StartTime + "~" + EndTime;
-                    carouselColumnObject.Text = result;
+
+                    for(int number = 0; number < 3; number++)
+                    {
+                        CarouselColumnObjectDto carouselColumnObject = new CarouselColumnObjectDto();
+                        string? StartTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[number].startTime).ToString("MM/dd HH:mm");
+                        string? EndTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[number].endTime).ToString("MM/dd HH:mm");
+                        result = "新竹市:" +
+                                  Environment.NewLine + $"天氣狀態: {responseBodyJsonParse.records.location[0].weatherElement[0].time[number].parameter.parameterName}" +
+                                  Environment.NewLine + $"降雨機率: {responseBodyJsonParse.records.location[0].weatherElement[1].time[number].parameter.parameterName}" + "%" +
+                                  Environment.NewLine + $"最低溫度: {responseBodyJsonParse.records.location[0].weatherElement[2].time[number].parameter.parameterName}" + "°C" +
+                                  Environment.NewLine + $"最高溫度: {responseBodyJsonParse.records.location[0].weatherElement[4].time[number].parameter.parameterName}" + "°C" +
+                                  Environment.NewLine + $"舒適度: {responseBodyJsonParse.records.location[0].weatherElement[3].time[number].parameter.parameterName}";
+                        //Console.WriteLine("抓取天氣API成功!");
+                        carouselColumnObject.Title = StartTime + "~" + EndTime;
+                        carouselColumnObject.Text = result;
+                        carouselList.Add(carouselColumnObject);
+                    }
+
                 }
                 else if (response.IsSuccessStatusCode == false)
                 {
                     Console.WriteLine("抓取天氣API失敗!");
                     return null;
                 }
-                return carouselColumnObject;
+                return carouselList;
             }
             catch (HttpRequestException e)
             {
