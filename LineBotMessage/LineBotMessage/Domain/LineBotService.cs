@@ -291,7 +291,7 @@ namespace LineBotMessage.Domain
                               Environment.NewLine + $"降雨機率: {responseBodyJsonParse.records.location[0].weatherElement[1].time[number].parameter.parameterName}" + "%" +
                               Environment.NewLine + $"最低溫度: {responseBodyJsonParse.records.location[0].weatherElement[2].time[number].parameter.parameterName}" + "°C" +
                               Environment.NewLine + $"最高溫度: {responseBodyJsonParse.records.location[0].weatherElement[4].time[number].parameter.parameterName}" + "°C" +
-                              Environment.NewLine + $"天氣舒適度: {responseBodyJsonParse.records.location[0].weatherElement[3].time[number].parameter.parameterName}";
+                              Environment.NewLine + $"舒適度: {responseBodyJsonParse.records.location[0].weatherElement[3].time[number].parameter.parameterName}";
                     //Console.WriteLine("抓取天氣API成功!");
                     carouselColumnObject.Title = StartTime + "~" + EndTime;
                     carouselColumnObject.Text = result;
