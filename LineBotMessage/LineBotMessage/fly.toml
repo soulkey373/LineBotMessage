@@ -1,4 +1,4 @@
-# fly.toml file generated for linebotapp on 2022-12-25T22:46:28+08:00
+# fly.toml file generated for linebotapp on 2022-12-27T14:09:14+08:00
 
 app = "linebotapp"
 kill_signal = "SIGINT"

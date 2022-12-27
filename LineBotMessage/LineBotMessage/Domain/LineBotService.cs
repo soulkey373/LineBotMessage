@@ -13,6 +13,8 @@ using System;
 using static LineBotMessage.Dtos.BaseMessageDto;
 using NpgsqlTypes;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+using System.Drawing;
+using System.Data.Common;
 
 namespace LineBotMessage.Domain
 {
@@ -43,7 +45,7 @@ namespace LineBotMessage.Domain
                     case WebhookEventTypeEnum.Message:
                         if (eventObject.Message.Type == MessageTypeEnum.Text)
                             getPostgresDate();
-                        await ReceiveMessageWebhookEvent(eventObject);
+                        //await ReceiveMessageWebhookEvent(eventObject);
                         break;
                     case WebhookEventTypeEnum.Unsend:
                         Console.WriteLine($"使用者{eventObject.Source.UserId}在聊天室收回訊息！");
@@ -369,38 +371,28 @@ namespace LineBotMessage.Domain
 
         }
 
-        public string getPostgresDate()
+        public void getPostgresDate()
         {
+            var connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
             try
             {
-                string Host = "soulkeydb.fly.dev";
-                string User = "postgres";
-                string DBname = "linebotapp";
-                string Password = "NeB8A71EYRW4CgU";
-                string Port = "5432";
-                string connString =
-                String.Format(
-                   "Host={0};Username={1};Database={2};Port={3};Password={4};SSLMode=disable",
-                   Host,
-                   User,
-                   DBname,
-                   Port,
-                   Password);
-
                 using (var conn = new NpgsqlConnection(connString))
                 {
                     conn.Open();
-                    Console.WriteLine("連線db成功!v6");
+                    Console.WriteLine("連線成功");
+                    using var cmd = new NpgsqlCommand();
+                    cmd.Connection = conn;
+                    cmd.CommandText = @"CREATE TABLE cars(id SERIAL PRIMARY KEY,
+        name VARCHAR(255), price INT)";
+                    cmd.ExecuteNonQuery();
+                    Console.WriteLine("Table cars created");
+
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine("連線db失敗!v6");
-                Console.WriteLine(e.Message);
-                throw new ArgumentException(e.ToString());
+                Console.WriteLine("連線失敗",ex.ToString());
             }
-            return "";
-
         }
 
     }
