@@ -15,6 +15,7 @@ using NpgsqlTypes;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using System.Drawing;
 using System.Data.Common;
+using System.Data;
 
 namespace LineBotMessage.Domain
 {
@@ -374,25 +375,68 @@ namespace LineBotMessage.Domain
         public void getPostgresDate()
         {
             var connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
+            DataTable dt = new DataTable();
             try
             {
                 using (var conn = new NpgsqlConnection(connString))
                 {
                     conn.Open();
-                    Console.WriteLine("連線成功");
-                    using var cmd = new NpgsqlCommand();
-                    cmd.Connection = conn;
-                    cmd.CommandText = @"CREATE TABLE cars(id SERIAL PRIMARY KEY,
-        name VARCHAR(255), price INT)";
-                    cmd.ExecuteNonQuery();
-                    Console.WriteLine("Table cars created");
-
+                    Console.WriteLine("--------------------連線成功--------------------");
+                    using (var cmd = new NpgsqlCommand("SELECT*FROM cars", conn))
+                    {
+                        using (NpgsqlDataReader? reader = cmd.ExecuteReader())
+                        {
+                            dt = ConvertToDataTable(reader);
+                            string dtId = "";
+                            string dtName = "";
+                            string dtPrice = "";
+                            dtId = dt.Select()[0]["id"].ToString();
+                            dtName = dt.Select()[0]["name"].ToString();
+                            dtPrice = dt.Select()[0]["price"].ToString();
+                            Console.WriteLine($"Id = {dtId}\nName = {dtName}\nPrice = {dtPrice}");
+                        }
+                    }
                 }
+                Console.WriteLine("--------------------連線關閉--------------------");
             }
             catch (Exception ex)
             {
                 Console.WriteLine("連線失敗",ex.ToString());
             }
+        }
+        public static DataTable? ConvertToDataTable(NpgsqlDataReader dataReader)
+        {
+
+            try
+            {
+                DataTable dataTable = new DataTable();
+                for (int i=0; i < dataReader.FieldCount; i++)
+                {
+                    DataColumn column = new DataColumn();
+                    column.DataType = dataReader.GetFieldType(i);
+                    column.ColumnName = dataReader.GetName(i);
+                    dataTable.Columns.Add(column);
+                }
+
+                while (dataReader.Read())
+                {
+                    DataRow row = dataTable.NewRow();
+                    for(int i=0; i < dataReader.FieldCount; i++)
+                    {
+                        row[i] = dataReader[i].ToString();
+                    }
+                    dataTable.Rows.Add(row);
+                    row = null;
+                }
+                dataReader.Close();
+                return dataTable;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("解析DataReader錯誤",e.ToString());
+                return null;
+            }
+
         }
 
     }
