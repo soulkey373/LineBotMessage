@@ -21,12 +21,19 @@ namespace LineBotMessage.DbConn
             {
                 this._Id = Convert.ToInt32(dr["Id"]);
 
-                this._Issue = Convert.ToString(dr["Issue"]);
-
+                if (dr["Issue"] == DBNull.Value)
+                    this._Issue = null;
+                else
+                    this._Issue = Convert.ToString(dr["Issue"]);
                 if (dr["Time"] == DBNull.Value)
                     this._Time = null;
                 else
                     this._Time = Convert.ToDateTime(dr["Time"]);
+
+                if (dr["Step"] == DBNull.Value)
+                    this._Step = null;
+                else
+                    this._Step = Convert.ToString(dr["Step"]);
 
             }
             catch (Exception ex)
@@ -95,10 +102,10 @@ namespace LineBotMessage.DbConn
 
                             db = ConvertToDataTable(reader);
                             Console.WriteLine("目前UserRecord裡有{0}筆資料", db.Rows.Count);
-                            _Id = Convert.ToInt32(db.Select()[0]["id"]);
-                            _Issue = db.Select()[0]["Issue"].ToString();
-                            _Time = Convert.ToDateTime(db.Select()[0]["Time"]);
-                            _Step = db.Select()[0]["Step"].ToString();
+                            Id = Convert.ToInt32(db.Select()[0]["id"]);
+                            Issue = db.Select()[0]["Issue"].ToString();
+                            Time = Convert.ToDateTime(db.Select()[0]["Time"]);
+                            Step = db.Select()[0]["Step"].ToString();
 
                         }
                     }
@@ -114,8 +121,7 @@ namespace LineBotMessage.DbConn
 
             return true;
         }
-
-        public bool Create(int Id, string Issue, string Step)
+        public bool Create()
         {
             DataTable db = new DataTable();
             StringBuilder sbCmd = new StringBuilder();
@@ -125,12 +131,12 @@ namespace LineBotMessage.DbConn
                 {
                     conn.Open();
                     Console.WriteLine("--------------------連線成功--------------------");
-                    using (var cmd = new NpgsqlCommand("INSERT INTO UserRecord(Id,Issue,Time,Step)VALUES(@Id, @Issue,NOW(),@Step);", conn))
+                    using (var cmd = new NpgsqlCommand("INSERT INTO UserRecord(Id,Issue,Time,Step)VALUES(@Id,@Issue,NOW(),@Step);", conn))
                     {
                         cmd.Parameters.AddWithValue("Id", Id);
                         cmd.Parameters.AddWithValue("Issue", Issue);
                         cmd.Parameters.AddWithValue("Step", Step);
-
+                        cmd.Connection= conn;
                         int nRows = cmd.ExecuteNonQuery();
                         Console.Out.WriteLine(String.Format("新增的行數:{0}筆", nRows));
                     }
@@ -146,8 +152,7 @@ namespace LineBotMessage.DbConn
 
             return true;
         }
-
-        public bool Update(int Id, string Issue, string Step)
+        public bool Update()
         {
             DataTable db = new DataTable();
             StringBuilder sbCmd = new StringBuilder();
@@ -157,7 +162,7 @@ namespace LineBotMessage.DbConn
                 {
                     conn.Open();
                     Console.WriteLine("--------------------連線成功--------------------");
-                    using (var cmd = new NpgsqlCommand("UPDATE UserRecord SET Issue=@Issue,Step=@Step WHERE Id=@Id;", conn))
+                    using (var cmd = new NpgsqlCommand("UPDATE UserRecord SET Issue = @Issue , Step = @Step WHERE Id = @Id;", conn))
                     {
                         cmd.Parameters.AddWithValue("Id", Id);
                         cmd.Parameters.AddWithValue("Issue", Issue);
@@ -202,40 +207,15 @@ namespace LineBotMessage.DbConn
 
             return true;
         }
-        #endregion
-
-        #region 連postgres範例
-        public void getPostgresDate()
+        public void Save()
         {
-
-            DataTable dt = new DataTable();
-            try
+            if (!string.IsNullOrWhiteSpace(Id.ToString()))
             {
-                using (var conn = new NpgsqlConnection(connString))
-                {
-                    conn.Open();
-                    Console.WriteLine("--------------------連線成功--------------------");
-                    using (var cmd = new NpgsqlCommand("SELECT*FROM cars", conn))
-                    {
-                        using (NpgsqlDataReader? reader = cmd.ExecuteReader())
-                        {
-
-                            dt = ConvertToDataTable(reader);
-                            string dtId = "";
-                            string dtName = "";
-                            string dtPrice = "";
-                            dtId = dt.Select()[0]["id"].ToString();
-                            dtName = dt.Select()[0]["name"].ToString();
-                            dtPrice = dt.Select()[0]["price"].ToString();
-                            Console.WriteLine($"Id = {dtId}\nName = {dtName}\nPrice = {dtPrice}");
-                        }
-                    }
-                }
-                Console.WriteLine("--------------------連線關閉--------------------");
+                this.Update();
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine("連線失敗", ex.ToString());
+                this.Create();
             }
         }
         #endregion

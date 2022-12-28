@@ -17,6 +17,7 @@ using System.Drawing;
 using System.Data.Common;
 using System.Data;
 using LineBotMessage.DbConn;
+using Microsoft.Build.Tasks;
 
 namespace LineBotMessage.Domain
 {
@@ -46,8 +47,8 @@ namespace LineBotMessage.Domain
                 {
                     case WebhookEventTypeEnum.Message:
                         if (eventObject.Message.Type == MessageTypeEnum.Text)
-
-                            text();
+                           
+                            OrderFood(eventObject.Message.Text.Trim());
                         //await ReceiveMessageWebhookEvent(eventObject);
                         break;
 
@@ -383,12 +384,22 @@ namespace LineBotMessage.Domain
         }
         #endregion
 
-        public void text()
+        public void OrderFood(string text)
         {
             UserRecordInformation userRecord = new UserRecordInformation();
-            //userRecord.Load();
-            //Console.WriteLine($"{userRecord.Id.ToString()}\n{userRecord.Issue}\n{userRecord.Time}");
-            userRecord.Update(1,"牛排","Q2");
+            int day = (int)Convert.ToUInt32(text);
+            switch (day)
+            {
+                case 1:
+                    userRecord.Load();
+                    break;
+                case 2:
+                    userRecord.Save();
+                    break;
+                case 3:
+                    userRecord.Delete();
+                    break;
+            }
         }
 
     }
