@@ -388,7 +388,7 @@ namespace LineBotMessage.Domain
             UserRecordInformation userRecord = new UserRecordInformation();
             //userRecord.Load();
             //Console.WriteLine($"{userRecord.Id.ToString()}\n{userRecord.Issue}\n{userRecord.Time}");
-            userRecord.Delete();
+            userRecord.Update(1,"牛排","Q2");
         }
 
     }

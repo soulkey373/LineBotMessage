@@ -41,6 +41,7 @@ namespace LineBotMessage.DbConn
             this._Id = 0;
             this._Issue = "";
             this._Time = null;
+            this._Step = "";
         }
         #endregion
 
@@ -48,6 +49,7 @@ namespace LineBotMessage.DbConn
         private int _Id;
         private String _Issue;
         private DateTime? _Time;
+        private string _Step = "";
         #endregion
 
         #region Public Properties
@@ -67,7 +69,11 @@ namespace LineBotMessage.DbConn
             get { return _Time; }
             set { _Time = value; }
         }
-
+        public string Step
+        {
+            get { return _Step; }
+            set { _Step = value; }
+        }
         #endregion
 
         #region Method
@@ -92,6 +98,7 @@ namespace LineBotMessage.DbConn
                             _Id = Convert.ToInt32(db.Select()[0]["id"]);
                             _Issue = db.Select()[0]["Issue"].ToString();
                             _Time = Convert.ToDateTime(db.Select()[0]["Time"]);
+                            _Step = db.Select()[0]["Step"].ToString();
 
                         }
                     }
@@ -108,7 +115,7 @@ namespace LineBotMessage.DbConn
             return true;
         }
 
-        public bool Create(int Id, string Issue)
+        public bool Create(int Id, string Issue, string Step)
         {
             DataTable db = new DataTable();
             StringBuilder sbCmd = new StringBuilder();
@@ -118,10 +125,11 @@ namespace LineBotMessage.DbConn
                 {
                     conn.Open();
                     Console.WriteLine("--------------------連線成功--------------------");
-                    using (var cmd = new NpgsqlCommand("INSERT INTO UserRecord(Id,Issue,Time)VALUES(@Id, @Issue,NOW());", conn))
+                    using (var cmd = new NpgsqlCommand("INSERT INTO UserRecord(Id,Issue,Time,Step)VALUES(@Id, @Issue,NOW(),@Step);", conn))
                     {
                         cmd.Parameters.AddWithValue("Id", Id);
                         cmd.Parameters.AddWithValue("Issue", Issue);
+                        cmd.Parameters.AddWithValue("Step", Step);
 
                         int nRows = cmd.ExecuteNonQuery();
                         Console.Out.WriteLine(String.Format("新增的行數:{0}筆", nRows));
@@ -139,7 +147,7 @@ namespace LineBotMessage.DbConn
             return true;
         }
 
-        public bool Update(int Id, string Issue)
+        public bool Update(int Id, string Issue, string Step)
         {
             DataTable db = new DataTable();
             StringBuilder sbCmd = new StringBuilder();
@@ -149,11 +157,11 @@ namespace LineBotMessage.DbConn
                 {
                     conn.Open();
                     Console.WriteLine("--------------------連線成功--------------------");
-                    using (var cmd = new NpgsqlCommand("UPDATE UserRecord SET Issue=@Issue WHERE Id=@Id;", conn))
+                    using (var cmd = new NpgsqlCommand("UPDATE UserRecord SET Issue=@Issue,Step=@Step WHERE Id=@Id;", conn))
                     {
                         cmd.Parameters.AddWithValue("Id", Id);
                         cmd.Parameters.AddWithValue("Issue", Issue);
-
+                        cmd.Parameters.AddWithValue("Step", Step);
                         int nRows = cmd.ExecuteNonQuery();
                         Console.Out.WriteLine(String.Format("更新的行數:{0}筆", nRows));
                     }
@@ -199,7 +207,7 @@ namespace LineBotMessage.DbConn
         #region 連postgres範例
         public void getPostgresDate()
         {
-           
+
             DataTable dt = new DataTable();
             try
             {
