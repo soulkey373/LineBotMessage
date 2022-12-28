@@ -394,6 +394,7 @@ namespace LineBotMessage.Domain
                     userRecord.Load();
                     break;
                 case 2:
+                    userRecord.Id = 123;
                     userRecord.Save();
                     break;
                 case 3:
