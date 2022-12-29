@@ -47,52 +47,52 @@ namespace LineBotMessage.Domain
                 {
                     case WebhookEventTypeEnum.Message:
                         if (eventObject.Message.Type == MessageTypeEnum.Text)
-                           
+
                             OrderFood(eventObject.Message.Text.Trim());
                         //await ReceiveMessageWebhookEvent(eventObject);
                         break;
 
-                    #region 其他情境
-                    //case WebhookEventTypeEnum.Unsend:
-                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}在聊天室收回訊息！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Follow:
-                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}將我們新增為好友！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Unfollow:
-                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}封鎖了我們！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Join:
-                    //    Console.WriteLine("我們被邀請進入聊天室了！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Leave:
-                    //    Console.WriteLine("我們被聊天室踢出了");
-                    //    break;
-                    //case WebhookEventTypeEnum.MemberJoined:
-                    //    string joinedMemberIds = "";
-                    //    foreach (var member in eventObject.Joined.Members)
-                    //    {
-                    //        joinedMemberIds += $"{member.UserId} ";
-                    //    }
-                    //    Console.WriteLine($"使用者{joinedMemberIds}加入了群組！");
-                    //    break;
-                    //case WebhookEventTypeEnum.MemberLeft:
-                    //    string leftMemberIds = "";
-                    //    foreach (var member in eventObject.Left.Members)
-                    //    {
-                    //        leftMemberIds += $"{member.UserId} ";
-                    //    }
-                    //    Console.WriteLine($"使用者{leftMemberIds}離開了群組！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Postback:
-                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}觸發了postback事件");
-                    //    break;
-                    //case WebhookEventTypeEnum.VideoPlayComplete:
-                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}");
-                    //    break;
-                    //case MessageTypeEnum.Location:
-                    //    messageRequest = _jsonProvider.Deserialize<BroadcastMessageRequestDto<LocationMesssageDto>>(strBody);
-                    //    break;
+                        #region 其他情境
+                        //case WebhookEventTypeEnum.Unsend:
+                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}在聊天室收回訊息！");
+                        //    break;
+                        //case WebhookEventTypeEnum.Follow:
+                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}將我們新增為好友！");
+                        //    break;
+                        //case WebhookEventTypeEnum.Unfollow:
+                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}封鎖了我們！");
+                        //    break;
+                        //case WebhookEventTypeEnum.Join:
+                        //    Console.WriteLine("我們被邀請進入聊天室了！");
+                        //    break;
+                        //case WebhookEventTypeEnum.Leave:
+                        //    Console.WriteLine("我們被聊天室踢出了");
+                        //    break;
+                        //case WebhookEventTypeEnum.MemberJoined:
+                        //    string joinedMemberIds = "";
+                        //    foreach (var member in eventObject.Joined.Members)
+                        //    {
+                        //        joinedMemberIds += $"{member.UserId} ";
+                        //    }
+                        //    Console.WriteLine($"使用者{joinedMemberIds}加入了群組！");
+                        //    break;
+                        //case WebhookEventTypeEnum.MemberLeft:
+                        //    string leftMemberIds = "";
+                        //    foreach (var member in eventObject.Left.Members)
+                        //    {
+                        //        leftMemberIds += $"{member.UserId} ";
+                        //    }
+                        //    Console.WriteLine($"使用者{leftMemberIds}離開了群組！");
+                        //    break;
+                        //case WebhookEventTypeEnum.Postback:
+                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}觸發了postback事件");
+                        //    break;
+                        //case WebhookEventTypeEnum.VideoPlayComplete:
+                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}");
+                        //    break;
+                        //case MessageTypeEnum.Location:
+                        //    messageRequest = _jsonProvider.Deserialize<BroadcastMessageRequestDto<LocationMesssageDto>>(strBody);
+                        //    break;
                         #endregion
                 }
             }
@@ -386,19 +386,29 @@ namespace LineBotMessage.Domain
 
         public void OrderFood(string text)
         {
-            UserRecordInformation userRecord = new UserRecordInformation();
+            string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
+            //UserRecordInformation userRecord = new UserRecordInformation();
+            UserRecordInformationDapper userRecord1 = new UserRecordInformationDapper();
             int day = (int)Convert.ToUInt32(text);
             switch (day)
             {
                 case 1:
-                    userRecord.Load();
+                    /*userRecord.Load()*/
+                    IList<UserRecord>? reusult = userRecord1.Load(connString);
+                    Console.WriteLine("---------Dapper測試---------");
+                    Console.WriteLine("Load的數量:{0}",reusult.Count);
+                    if (reusult.Count > 0)
+                    {
+                        Console.WriteLine($"{reusult[0].Id}\n{reusult[0].Issue}\n{reusult[0].Time}\n{reusult[0].Step}");
+                    }
+                    
                     break;
                 case 2:
-                    userRecord.Id = 123;
-                    userRecord.Save();
+                    //userRecord.Id = 123;
+                    //userRecord.Save();
                     break;
                 case 3:
-                    userRecord.Delete();
+                    //userRecord.Delete();
                     break;
             }
         }
