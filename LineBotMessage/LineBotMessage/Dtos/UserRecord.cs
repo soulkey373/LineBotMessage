@@ -2,9 +2,12 @@
 {
     public class UserRecord
     {
-        public int Id { get; set; }
-        public string Issue { get; set; }
-        public DateTime Time { get; set; }
-        public string Step { get; set; }
+        public int id { get; set; }
+        public string? mealtype { get; set; }
+        public string? foodtype { get; set; }
+        public string? lat { get; set; }
+        public string? lon { get; set; }
+        public string? step { get; set; }
+        public DateTime? time { get; set; }
     }
 }

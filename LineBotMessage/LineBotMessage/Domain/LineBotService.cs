@@ -47,9 +47,10 @@ namespace LineBotMessage.Domain
                 {
                     case WebhookEventTypeEnum.Message:
                         if (eventObject.Message.Type == MessageTypeEnum.Text)
-
-                            OrderFood(eventObject.Message.Text.Trim());
-                        //await ReceiveMessageWebhookEvent(eventObject);
+                        {
+                            await ReceiveMessageWebhookEvent(eventObject);
+                        }
+                            //OrderFood(eventObject.Message.Text.Trim());
                         break;
 
                         #region 其他情境
@@ -117,6 +118,7 @@ namespace LineBotMessage.Domain
             #region Quick Reply 快速回復
             dynamic replyMessage = new ReplyMessageRequestDto<BaseMessageDto>();
             #endregion
+
             if (eventObject.Message.Text != "" && eventObject.Message.Text != null)
             {
                 #region 當使用者鍵入"天氣時"
@@ -238,6 +240,13 @@ namespace LineBotMessage.Domain
                 //}
                 //replyMessage.Messages.Add(textMessage);
                 //replyMessage1.Messages.Add(templateMessage);
+                #region 點餐系統
+                if (eventObject.Message.Text.Trim() == "吃什麼?")
+                {
+                    
+                }
+                #endregion
+
                 ReplyMessageHandler(replyMessage);
             }
         }
@@ -384,34 +393,61 @@ namespace LineBotMessage.Domain
         }
         #endregion
 
-        public void OrderFood(string text)
-        {
-            string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
-            //UserRecordInformation userRecord = new UserRecordInformation();
-            UserRecordInformationDapper userRecord1 = new UserRecordInformationDapper();
-            int day = (int)Convert.ToUInt32(text);
-            switch (day)
-            {
-                case 1:
-                    /*userRecord.Load()*/
-                    IList<UserRecord>? reusult = userRecord1.Load(connString);
-                    Console.WriteLine("---------Dapper測試---------");
-                    Console.WriteLine("Load的數量:{0}",reusult.Count);
-                    if (reusult.Count > 0)
-                    {
-                        Console.WriteLine($"{reusult[0].Id}\n{reusult[0].Issue}\n{reusult[0].Time}\n{reusult[0].Step}");
-                    }
-                    
-                    break;
-                case 2:
-                    //userRecord.Id = 123;
-                    //userRecord.Save();
-                    break;
-                case 3:
-                    //userRecord.Delete();
-                    break;
-            }
-        }
+        #region Dapper範例參考_orderfood
+        //public void OrderFood(string text)
+        //{
+        //    string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
+        //    //UserRecordInformation userRecord = new UserRecordInformation();
+        //    UserRecordInformationDapper userRecord1 = new UserRecordInformationDapper();
+        //    int day = (int)Convert.ToUInt32(text);
+        //    switch (day)
+        //    {
+        //        case 1:
+        //            DateTime time= DateTime.Now;
+        //            UserRecord userRecord = new UserRecord();
+        //            userRecord.id = 930030;
+        //            userRecord.mealtype = "早餐";
+        //            userRecord.foodtype = "滿福堡";
+        //            userRecord.lon = "122";
+        //            userRecord.lat = "76";
+        //            userRecord.time = time;
+        //            userRecord.step = "Q1";
+        //            var reusult = userRecord1.Create(connString, userRecord);
+        //            Console.WriteLine("---------Dapper測試:Create模式---------");
+        //            Console.WriteLine("Create:{0}", reusult?"成功":"失敗");             
+        //            break;
+        //        case 2:
+        //            int bocci = 930030;
+        //            var reusult2 = userRecord1.Load(connString, bocci);
+        //            Console.WriteLine("---------Dapper測試:Load模式---------");
+        //            Console.WriteLine($"Load \n{reusult2[0].id}\n{reusult2[0].mealtype}\n{reusult2[0].foodtype}\n{reusult2[0].lat}\n{reusult2[0].lon}\n{reusult2[0].step}\n{reusult2[0].time}");
+
+        //            break;
+        //        case 3:
+        //            DateTime time2 = DateTime.Now;
+        //            UserRecord userRecord4 = new UserRecord();
+        //            userRecord4.id = 930030;
+        //            userRecord4.mealtype = "午餐";
+        //            userRecord4.foodtype = "雞腿便當";
+        //            userRecord4.lon = "122";
+        //            userRecord4.lat = "76";
+        //            userRecord4.time = time2;
+        //            userRecord4.step = "Q1";
+        //            var reusult3 = userRecord1.Update(connString, userRecord4);
+        //            var arg2 = reusult3 ? "成功" : "失敗";
+        //            Console.WriteLine("---------Dapper測試:Load模式---------");
+        //            Console.WriteLine($"更新:{arg2}");
+        //            break;
+        //        case 4:
+        //            int bocc2 = 930030;
+        //            var reusult5 = userRecord1.Delete(connString, bocc2);
+        //            var arg = reusult5 ? "成功" : "失敗";
+        //            Console.WriteLine("---------Dapper測試:Load模式---------");
+        //            Console.WriteLine($"刪除:{arg}");
+        //            break;
+        //    }
+        //}
+        #endregion
 
     }
 }
