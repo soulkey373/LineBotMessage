@@ -7,6 +7,10 @@ processes = []
 
 [env]
 
+[mounts]
+source="myapp_data"
+destination="/app/data"
+
 [experimental]
   allowed_public_ports = []
   auto_rollback = true

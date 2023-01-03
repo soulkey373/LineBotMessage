@@ -246,7 +246,7 @@ namespace LineBotMessage.Domain
                     
                 }
                 #endregion
-
+                OrderFood(eventObject.Message.Text.Trim());
                 ReplyMessageHandler(replyMessage);
             }
         }
@@ -394,59 +394,91 @@ namespace LineBotMessage.Domain
         #endregion
 
         #region Dapper範例參考_orderfood
-        //public void OrderFood(string text)
-        //{
-        //    string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
-        //    //UserRecordInformation userRecord = new UserRecordInformation();
-        //    UserRecordInformationDapper userRecord1 = new UserRecordInformationDapper();
-        //    int day = (int)Convert.ToUInt32(text);
-        //    switch (day)
-        //    {
-        //        case 1:
-        //            DateTime time= DateTime.Now;
-        //            UserRecord userRecord = new UserRecord();
-        //            userRecord.id = 930030;
-        //            userRecord.mealtype = "早餐";
-        //            userRecord.foodtype = "滿福堡";
-        //            userRecord.lon = "122";
-        //            userRecord.lat = "76";
-        //            userRecord.time = time;
-        //            userRecord.step = "Q1";
-        //            var reusult = userRecord1.Create(connString, userRecord);
-        //            Console.WriteLine("---------Dapper測試:Create模式---------");
-        //            Console.WriteLine("Create:{0}", reusult?"成功":"失敗");             
-        //            break;
-        //        case 2:
-        //            int bocci = 930030;
-        //            var reusult2 = userRecord1.Load(connString, bocci);
-        //            Console.WriteLine("---------Dapper測試:Load模式---------");
-        //            Console.WriteLine($"Load \n{reusult2[0].id}\n{reusult2[0].mealtype}\n{reusult2[0].foodtype}\n{reusult2[0].lat}\n{reusult2[0].lon}\n{reusult2[0].step}\n{reusult2[0].time}");
+        public void OrderFood(string text)
+        {
+            string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
+            //UserRecordInformation userRecord = new UserRecordInformation();
+            UserRecordInformationDapper userRecord1 = new UserRecordInformationDapper();
+            int day = (int)Convert.ToUInt32(text);
+            switch (day)
+            {
+                case 1:
+                    DateTime time = DateTime.Now;
+                    UserRecord userRecord = new UserRecord();
+                    userRecord.id = 930030;
+                    userRecord.mealtype = "早餐";
+                    userRecord.foodtype = "滿福堡";
+                    userRecord.lon = "122";
+                    userRecord.lat = "76";
+                    userRecord.time = time;
+                    userRecord.step = "Q1";
+                    var reusult = userRecord1.Create(connString, userRecord);
+                    Console.WriteLine("---------Dapper測試:Create模式---------");
+                    Console.WriteLine("Create:{0}", reusult ? "成功" : "失敗");
+                    break;
+                case 2:
+                    int bocci = 930030;
+                    var reusult2 = userRecord1.Load(connString, bocci);
+                    Console.WriteLine("---------Dapper測試:Load模式---------");
+                    Console.WriteLine($"Load \n{reusult2[0].id}\n{reusult2[0].mealtype}\n{reusult2[0].foodtype}\n{reusult2[0].lat}\n{reusult2[0].lon}\n{reusult2[0].step}\n{reusult2[0].time}");
 
-        //            break;
-        //        case 3:
-        //            DateTime time2 = DateTime.Now;
-        //            UserRecord userRecord4 = new UserRecord();
-        //            userRecord4.id = 930030;
-        //            userRecord4.mealtype = "午餐";
-        //            userRecord4.foodtype = "雞腿便當";
-        //            userRecord4.lon = "122";
-        //            userRecord4.lat = "76";
-        //            userRecord4.time = time2;
-        //            userRecord4.step = "Q1";
-        //            var reusult3 = userRecord1.Update(connString, userRecord4);
-        //            var arg2 = reusult3 ? "成功" : "失敗";
-        //            Console.WriteLine("---------Dapper測試:Load模式---------");
-        //            Console.WriteLine($"更新:{arg2}");
-        //            break;
-        //        case 4:
-        //            int bocc2 = 930030;
-        //            var reusult5 = userRecord1.Delete(connString, bocc2);
-        //            var arg = reusult5 ? "成功" : "失敗";
-        //            Console.WriteLine("---------Dapper測試:Load模式---------");
-        //            Console.WriteLine($"刪除:{arg}");
-        //            break;
-        //    }
-        //}
+                    break;
+                case 3:
+                    DateTime time2 = DateTime.Now;
+                    UserRecord userRecord4 = new UserRecord();
+                    userRecord4.id = 930030;
+                    userRecord4.mealtype = "午餐";
+                    userRecord4.foodtype = "雞腿便當";
+                    userRecord4.lon = "122";
+                    userRecord4.lat = "76";
+                    userRecord4.time = time2;
+                    userRecord4.step = "Q1";
+                    var reusult3 = userRecord1.Update(connString, userRecord4);
+                    var arg2 = reusult3 ? "成功" : "失敗";
+                    Console.WriteLine("---------Dapper測試:Load模式---------");
+                    Console.WriteLine($"更新:{arg2}");
+                    break;
+                case 4:
+                    int bocc2 = 930030;
+                    var reusult5 = userRecord1.Delete(connString, bocc2);
+                    var arg = reusult5 ? "成功" : "失敗";
+                    Console.WriteLine("---------Dapper測試:Load模式---------");
+                    Console.WriteLine($"刪除:{arg}");
+                    break;
+                case 5:
+                    string time1 = DateTime.Now.ToString();
+                    string filePath = "/app/data/status.txt";
+                    if (File.Exists(filePath))
+                    {
+                        //讀取第一行
+                        string firstLine = File.ReadLines(filePath).First();
+                        //建檔時間
+                        DateTime time3 = DateTime.Parse(firstLine);
+                        //設定2分鐘區間
+                        TimeSpan interval = TimeSpan.FromMinutes(2);
+                        DateTime now = DateTime.Now;
+                        TimeSpan diff = now.Subtract(time3);
+                        //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
+                        if (diff.CompareTo(interval) > 0)
+                        {
+                            Console.WriteLine("超過2分鐘，將會刪除");
+                            File.Delete(filePath);
+                        }
+                        else
+                        {
+                            Console.WriteLine("未超過2分鐘");
+                        }
+                    }
+                    else
+                    {
+                        File.WriteAllText(filePath,time1);
+                        string firstLine = File.ReadLines(filePath).First();
+                        Console.WriteLine($"以建立紀錄\n{firstLine}");
+                    }
+
+                    break;
+            }
+        }
         #endregion
 
     }
