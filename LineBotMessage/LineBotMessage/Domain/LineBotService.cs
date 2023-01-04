@@ -39,6 +39,7 @@ namespace LineBotMessage.Domain
 
         public async void ReceiveWebhook(WebhookRequestBodyDto requestBody)
         {
+            Console.WriteLine("進來ReceiveWebhook");
             string strBody = requestBody.ToString();
             dynamic messageRequest = new BroadcastMessageRequestDto<BaseMessageDto>();
             foreach (var eventObject in requestBody.Events)
@@ -48,6 +49,7 @@ namespace LineBotMessage.Domain
                     case WebhookEventTypeEnum.Message:
                         if (eventObject.Message.Type == MessageTypeEnum.Text)
                         {
+                            Console.WriteLine("進來Message的switch case");
                             await ReceiveMessageWebhookEvent(eventObject);
                         }
                             //OrderFood(eventObject.Message.Text.Trim());
@@ -101,6 +103,11 @@ namespace LineBotMessage.Domain
 
         private async Task ReceiveMessageWebhookEvent(WebhookEventDto eventObject)
         {
+            Console.WriteLine("近來ReceiveMessageWebhookEvent的func");
+            ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+            replyMessage.ReplyToken = eventObject.ReplyToken;
+            replyMessage.Messages = new List<TextMessageDto>();
+
             #region 一般天氣文字回復
             //ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
             //replyMessage.ReplyToken = eventObject.ReplyToken;
@@ -116,11 +123,13 @@ namespace LineBotMessage.Domain
             #endregion
 
             #region Quick Reply 快速回復
-            dynamic replyMessage = new ReplyMessageRequestDto<BaseMessageDto>();
+            //dynamic replyMessage = new ReplyMessageRequestDto<BaseMessageDto>();
             #endregion
 
             if (eventObject.Message.Text != "" && eventObject.Message.Text != null)
             {
+                Console.WriteLine("進來第一個if");
+                Console.WriteLine(eventObject.Message.Text);
                 #region 當使用者鍵入"天氣時"
                 //if (eventObject.Message.Text.Trim() == "天氣")
                 //{
@@ -197,81 +206,104 @@ namespace LineBotMessage.Domain
 
                 #region 當使用者鍵入"測試快速回復"
 
-                if (eventObject.Message.Text.Contains("測試快速回復"))
-                {
-                    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
-                    {
-                        ReplyToken = eventObject.ReplyToken,
-                        Messages = new List<TextMessageDto>
-                        {
-                             new TextMessageDto
-                             {
-                                Text ="QuickReply 測試訊息",
-                                QuickReply = new QuickReplyItemDto
-                                {
-                                     Items = new List<QuickReplyButtonDto>
-                                     {
-                                         // message action
-                                            new QuickReplyButtonDto {
-                                                Action = new ActionDto {
-                                                    Type = ActionTypeEnum.Message,
-                                                    Label = "message 測試" ,
-                                                    Text = "測試"
-                                                }
-                                            },
-                                              // location action
-                                            new QuickReplyButtonDto {
-                                                Action = new ActionDto {
-                                                    Type = ActionTypeEnum.Location,
-                                                    Label = "開啟位置"
-                                                }
-                                            }
-                                     }
-                                }
-                             }
-                        }
-                    };
-
-                }
-                #endregion
+                //if (eventObject.Message.Text.Contains("測試快速回復"))
+                //{
+                //    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                //    {
+                //        ReplyToken = eventObject.ReplyToken,
+                //        Messages = new List<TextMessageDto>
+                //        {
+                //             new TextMessageDto
+                //             {
+                //                Text ="QuickReply 測試訊息",
+                //                QuickReply = new QuickReplyItemDto
+                //                {
+                //                     Items = new List<QuickReplyButtonDto>
+                //                     {
+                //                         // message action
+                //                            new QuickReplyButtonDto {
+                //                                Action = new ActionDto {
+                //                                    Type = ActionTypeEnum.Message,
+                //                                    Label = "message 測試" ,
+                //                                    Text = "測試"
+                //                                }
+                //                            },
+                //                              // location action
+                //                            new QuickReplyButtonDto {
+                //                                Action = new ActionDto {
+                //                                    Type = ActionTypeEnum.Location,
+                //                                    Label = "開啟位置"
+                //                                }
+                //                            }
+                //                     }
+                //                }
+                //             }
+                //        }
+                //    };
+                //}
                 //else
                 //{
                 //    textMessage.Text = eventObject.Message.Text;
                 //}
                 //replyMessage.Messages.Add(textMessage);
                 //replyMessage1.Messages.Add(templateMessage);
+                #endregion
+
                 #region 點餐系統
-                if (eventObject.Message.Text.Trim() == "吃什麼?")
+
+                if (eventObject.Message.Text.Trim() == "吃什麼")
                 {
-                    
+                    Console.WriteLine("進來吃什麼系統");
+                    string filePath = "/app/data/status.txt";
+                    if (File.Exists(filePath))
+                    {
+                        //讀取第一行
+                        string firstLine = File.ReadLines(filePath).First();
+                        //建檔時間
+                        DateTime time = DateTime.Parse(firstLine);
+                        //設定2分鐘區間
+                        TimeSpan interval = TimeSpan.FromMinutes(2);
+                        DateTime now = DateTime.Now;
+                        TimeSpan diff = now.Subtract(time);
+                        //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
+                        if (diff.CompareTo(interval) > 0)
+                        {
+                            Console.WriteLine("超過2分鐘，將會刪除");
+                            File.Delete(filePath);
+                        }
+                        else
+                        {
+                            Console.WriteLine("未超過2分鐘");
+                            ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                            {
+                                ReplyToken = eventObject.ReplyToken,
+                                Messages = new List<TextMessageDto>
+                                {
+                                    new TextMessageDto(){Text = "歡迎使用本點餐系統，我們將為您提供最佳的餐飲選擇"}
+                                }
+                            };
+                            ReplyMessage(replyMessage1);
+                        }
+                    }
+                    else
+                    {
+                        DateTime now = DateTime.Now;
+                        File.WriteAllText(filePath, now.ToString());
+                        string firstLine = File.ReadLines(filePath).First();
+                        Console.WriteLine($"以建立點餐紀錄\n{firstLine}");
+                    }
                 }
                 #endregion
-                OrderFood(eventObject.Message.Text.Trim());
-                ReplyMessageHandler(replyMessage);
+
             }
         }
 
-
-        /// <summary>
-        /// 接收到回覆請求時，在將請求傳至 Line 前多一層處理(目前為預留)
-        /// </summary>
-        /// <param name="messageType"></param>
-        /// <param name="requestBody"></param>
-        public void ReplyMessageHandler<T>(ReplyMessageRequestDto<T> requestBody)
-        {
-            ReplyMessage(requestBody);
-        }
-
-        /// <summary>
-        /// 將回覆訊息請求送到 Line
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="request"></param>
         public async void ReplyMessage<T>(ReplyMessageRequestDto<T> request)
         {
 
             try
             {
+                Console.WriteLine("進到ReplyMessage");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", channelAccessToken); //帶入 channel access token
                 string? json = _jsonProvider.Serialize(request);
@@ -283,6 +315,7 @@ namespace LineBotMessage.Domain
                 };
 
                 HttpResponseMessage response = await client.SendAsync(requestMessage);
+                Console.WriteLine(response);
                 Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
             }
             catch (Exception ex)
