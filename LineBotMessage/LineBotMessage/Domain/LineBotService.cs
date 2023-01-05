@@ -18,6 +18,7 @@ using System.Data.Common;
 using System.Data;
 using LineBotMessage.DbConn;
 using Microsoft.Build.Tasks;
+using System.Collections.Generic;
 
 namespace LineBotMessage.Domain
 {
@@ -39,7 +40,6 @@ namespace LineBotMessage.Domain
 
         public async void ReceiveWebhook(WebhookRequestBodyDto requestBody)
         {
-            Console.WriteLine("進來ReceiveWebhook");
             string strBody = requestBody.ToString();
             dynamic messageRequest = new BroadcastMessageRequestDto<BaseMessageDto>();
             foreach (var eventObject in requestBody.Events)
@@ -52,7 +52,7 @@ namespace LineBotMessage.Domain
                             Console.WriteLine("進來Message的switch case");
                             await ReceiveMessageWebhookEvent(eventObject);
                         }
-                            //OrderFood(eventObject.Message.Text.Trim());
+                        //OrderFood(eventObject.Message.Text.Trim());
                         break;
 
                         #region 其他情境
@@ -103,7 +103,6 @@ namespace LineBotMessage.Domain
 
         private async Task ReceiveMessageWebhookEvent(WebhookEventDto eventObject)
         {
-            Console.WriteLine("近來ReceiveMessageWebhookEvent的func");
             ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
             replyMessage.ReplyToken = eventObject.ReplyToken;
             replyMessage.Messages = new List<TextMessageDto>();
@@ -128,8 +127,6 @@ namespace LineBotMessage.Domain
 
             if (eventObject.Message.Text != "" && eventObject.Message.Text != null)
             {
-                Console.WriteLine("進來第一個if");
-                Console.WriteLine(eventObject.Message.Text);
                 #region 當使用者鍵入"天氣時"
                 //if (eventObject.Message.Text.Trim() == "天氣")
                 //{
@@ -253,7 +250,6 @@ namespace LineBotMessage.Domain
 
                 if (eventObject.Message.Text.Trim() == "吃什麼")
                 {
-                    Console.WriteLine("進來吃什麼系統");
                     string filePath = "/app/data/status.txt";
                     if (File.Exists(filePath))
                     {
@@ -262,35 +258,144 @@ namespace LineBotMessage.Domain
                         //建檔時間
                         DateTime time = DateTime.Parse(firstLine);
                         //設定2分鐘區間
-                        TimeSpan interval = TimeSpan.FromMinutes(2);
+                        TimeSpan interval = TimeSpan.FromMinutes(1);
                         DateTime now = DateTime.Now;
                         TimeSpan diff = now.Subtract(time);
                         //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
                         if (diff.CompareTo(interval) > 0)
                         {
-                            Console.WriteLine("超過2分鐘，將會刪除");
+                            Console.WriteLine("超過1分鐘，將刪除紀錄");
                             File.Delete(filePath);
+                            DateTime now1 = DateTime.Now;
+                            File.WriteAllText(filePath, now1.ToString());
+                            Console.WriteLine($"以建立點餐紀錄\n{firstLine}");
+
+                            ReplyMessageRequestDto<TemplateMessageDto<ButtonsTemplateDto>>? replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<ButtonsTemplateDto>>
+                            {
+                                ReplyToken = eventObject.ReplyToken,
+                                Messages = new List<TemplateMessageDto<ButtonsTemplateDto>>
+                                {
+                                    new TemplateMessageDto<ButtonsTemplateDto>
+                                    {
+                                        AltText = "這是點餐系統👋",
+                                        Template = new ButtonsTemplateDto
+                                        {
+                                        ThumbnailImageUrl = "https://pbs.twimg.com/media/E3RzkQkUcAETIMA?format=jpg&name=large",
+                                        ImageAspectRatio = TemplateImageAspectRatioEnum.Rectangle,
+                                        ImageSize = TemplateImageSizeEnum.Cover,
+                                        Title = "歡迎使用本點餐系統!",
+                                         Text = "請選擇您想要的餐點種類:",
+                                        Actions = new List<ActionDto>
+                                        {
+                                            new ActionDto
+                                            {
+                                                Type = ActionTypeEnum.Postback,
+                                                Data = "foodType=sushi",
+                                                Label = "早餐",
+                                                DisplayText = "早餐🍳"
+                                            },
+                                            new ActionDto
+                                            {
+                                                Type = ActionTypeEnum.Postback,
+                                                Data = "foodType=hot-pot",
+                                                Label = "午餐",
+                                                DisplayText = "午餐🍱"
+                                            },
+                                            new ActionDto
+                                            {
+                                                Type = ActionTypeEnum.Postback,
+                                                Data = "foodType=steak",
+                                                Label = "晚餐 ️",
+                                                DisplayText = "晚餐 🍽️"
+                                            },
+                                            new ActionDto
+                                            {
+                                                Type = ActionTypeEnum.Postback,
+                                                Data = "foodType=next",
+                                                Label = "夜消",
+                                                DisplayText = "夜消🍪"
+                                            }
+                                        }
+                                        }
+                                    }
+                                }
+                            };
+                            ReplyMessage(replyMessage1);
                         }
                         else
                         {
-                            Console.WriteLine("未超過2分鐘");
+                            Console.WriteLine("未超過1分鐘");
                             ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
                             {
                                 ReplyToken = eventObject.ReplyToken,
                                 Messages = new List<TextMessageDto>
-                                {
-                                    new TextMessageDto(){Text = "歡迎使用本點餐系統，我們將為您提供最佳的餐飲選擇"}
-                                }
+                             {
+                                new TextMessageDto(){Text = "距離上一個點餐系統未超過一分鐘，請稍後再啟用系統"}
+                             }
                             };
                             ReplyMessage(replyMessage1);
                         }
                     }
                     else
                     {
+
                         DateTime now = DateTime.Now;
                         File.WriteAllText(filePath, now.ToString());
                         string firstLine = File.ReadLines(filePath).First();
                         Console.WriteLine($"以建立點餐紀錄\n{firstLine}");
+
+                        ReplyMessageRequestDto<TemplateMessageDto<ButtonsTemplateDto>>? replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<ButtonsTemplateDto>>
+                        {
+                            ReplyToken = eventObject.ReplyToken,
+                            Messages = new List<TemplateMessageDto<ButtonsTemplateDto>>
+                                {
+                                    new TemplateMessageDto<ButtonsTemplateDto>
+                                    {
+                                        AltText = "這是點餐系統👋",
+                                        Template = new ButtonsTemplateDto
+                                        {
+                                        ThumbnailImageUrl = "https://pbs.twimg.com/media/E3RzkQkUcAETIMA?format=jpg&name=large",
+                                        ImageAspectRatio = TemplateImageAspectRatioEnum.Rectangle,
+                                        ImageSize = TemplateImageSizeEnum.Cover,
+                                        Title = "歡迎使用本點餐系統!",
+                                         Text = "請選擇您想要的餐點種類:",
+                                        Actions = new List<ActionDto>
+                                        {
+                                            new ActionDto
+                                            {
+                                                Type = ActionTypeEnum.Postback,
+                                                Data = "foodType=sushi",
+                                                Label = "早餐",
+                                                DisplayText = "早餐🍳"
+                                            },
+                                            new ActionDto
+                                            {
+                                                Type = ActionTypeEnum.Postback,
+                                                Data = "foodType=hot-pot",
+                                                Label = "午餐",
+                                                DisplayText = "午餐🍱"
+                                            },
+                                            new ActionDto
+                                            {
+                                                Type = ActionTypeEnum.Postback,
+                                                Data = "foodType=steak",
+                                                Label = "晚餐 ️",
+                                                DisplayText = "晚餐 🍽️"
+                                            },
+                                            new ActionDto
+                                            {
+                                                Type = ActionTypeEnum.Postback,
+                                                Data = "foodType=next",
+                                                Label = "夜消",
+                                                DisplayText = "夜消🍪"
+                                            }
+                                        }
+                                        }
+                                    }
+                                }
+                        };
+                        ReplyMessage(replyMessage1);
+
                     }
                 }
                 #endregion
@@ -303,7 +408,6 @@ namespace LineBotMessage.Domain
 
             try
             {
-                Console.WriteLine("進到ReplyMessage");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", channelAccessToken); //帶入 channel access token
                 string? json = _jsonProvider.Serialize(request);
@@ -315,7 +419,6 @@ namespace LineBotMessage.Domain
                 };
 
                 HttpResponseMessage response = await client.SendAsync(requestMessage);
-                Console.WriteLine(response);
                 Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
             }
             catch (Exception ex)
@@ -326,50 +429,50 @@ namespace LineBotMessage.Domain
         }
 
         #region 文字天氣
-        static async Task<string> GetWeather()
-        {
-            try
-            {
-                string result = "";
-                string local = "新竹市";
-                string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?format=JSON&locationName={local}";
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("CWB-99A47F28-FFB9-467F-B4E9-6972DDCF3CD6");
-                using HttpResponseMessage response = await client.GetAsync(Path);
-                Console.WriteLine(response.ToString());
+        //static async Task<string> GetWeather()
+        //{
+        //    try
+        //    {
+        //        string result = "";
+        //        string local = "新竹市";
+        //        string Path = $"https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?format=JSON&locationName={local}";
+        //        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("CWB-99A47F28-FFB9-467F-B4E9-6972DDCF3CD6");
+        //        using HttpResponseMessage response = await client.GetAsync(Path);
+        //        Console.WriteLine(response.ToString());
 
-                if (response.IsSuccessStatusCode == true)
-                {
-                    response.EnsureSuccessStatusCode();
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    WeatherReturn responseBodyJsonParse = JsonConvert.DeserializeObject<WeatherReturn>(responseBody);
-                    var StartTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[1].startTime).ToString("yyyy  MM / dd dddd HH:mm");
-                    var EndTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[1].endTime).ToString("yyyy  MM / dd dddd HH:mm");
-                    result = "新竹市12小時天氣預報" +
-                                                           Environment.NewLine + $"{StartTime}" +
-                                                           Environment.NewLine + $"{EndTime}" +
-                                                           Environment.NewLine + $"天氣狀態:{responseBodyJsonParse.records.location[0].weatherElement[0].time[0].parameter.parameterName}" +
-                                                           Environment.NewLine + $"降雨機率:{responseBodyJsonParse.records.location[0].weatherElement[1].time[0].parameter.parameterName}" + "%" +
-                                                           Environment.NewLine + $"最低溫度:{responseBodyJsonParse.records.location[0].weatherElement[2].time[0].parameter.parameterName}" + "°C" +
-                                                           Environment.NewLine + $"最高溫度:{responseBodyJsonParse.records.location[0].weatherElement[4].time[0].parameter.parameterName}" + "°C" +
-                                                           Environment.NewLine + $"天氣舒適度:{responseBodyJsonParse.records.location[0].weatherElement[3].time[0].parameter.parameterName}";
-                    Console.WriteLine("抓取天氣API成功!");
+        //        if (response.IsSuccessStatusCode == true)
+        //        {
+        //            response.EnsureSuccessStatusCode();
+        //            string responseBody = await response.Content.ReadAsStringAsync();
+        //            WeatherReturn responseBodyJsonParse = JsonConvert.DeserializeObject<WeatherReturn>(responseBody);
+        //            var StartTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[1].startTime).ToString("yyyy  MM / dd dddd HH:mm");
+        //            var EndTime = Convert.ToDateTime(responseBodyJsonParse.records.location[0].weatherElement[0].time[1].endTime).ToString("yyyy  MM / dd dddd HH:mm");
+        //            result = "新竹市12小時天氣預報" +
+        //                                                   Environment.NewLine + $"{StartTime}" +
+        //                                                   Environment.NewLine + $"{EndTime}" +
+        //                                                   Environment.NewLine + $"天氣狀態:{responseBodyJsonParse.records.location[0].weatherElement[0].time[0].parameter.parameterName}" +
+        //                                                   Environment.NewLine + $"降雨機率:{responseBodyJsonParse.records.location[0].weatherElement[1].time[0].parameter.parameterName}" + "%" +
+        //                                                   Environment.NewLine + $"最低溫度:{responseBodyJsonParse.records.location[0].weatherElement[2].time[0].parameter.parameterName}" + "°C" +
+        //                                                   Environment.NewLine + $"最高溫度:{responseBodyJsonParse.records.location[0].weatherElement[4].time[0].parameter.parameterName}" + "°C" +
+        //                                                   Environment.NewLine + $"天氣舒適度:{responseBodyJsonParse.records.location[0].weatherElement[3].time[0].parameter.parameterName}";
+        //            Console.WriteLine("抓取天氣API成功!");
 
-                }
-                else if (response.IsSuccessStatusCode == false)
-                {
-                    Console.WriteLine("抓取天氣API失敗!");
-                    return result;
-                }
-                return result;
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine("抓取天氣失敗!");
-                Console.WriteLine("Message :{0} ", e.Message.ToString());
-                return "";
-            }
+        //        }
+        //        else if (response.IsSuccessStatusCode == false)
+        //        {
+        //            Console.WriteLine("抓取天氣API失敗!");
+        //            return result;
+        //        }
+        //        return result;
+        //    }
+        //    catch (HttpRequestException e)
+        //    {
+        //        Console.WriteLine("抓取天氣失敗!");
+        //        Console.WriteLine("Message :{0} ", e.Message.ToString());
+        //        return "";
+        //    }
 
-        }
+        //}
         #endregion
 
         #region Carousel天氣
@@ -427,91 +530,91 @@ namespace LineBotMessage.Domain
         #endregion
 
         #region Dapper範例參考_orderfood
-        public void OrderFood(string text)
-        {
-            string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
-            //UserRecordInformation userRecord = new UserRecordInformation();
-            UserRecordInformationDapper userRecord1 = new UserRecordInformationDapper();
-            int day = (int)Convert.ToUInt32(text);
-            switch (day)
-            {
-                case 1:
-                    DateTime time = DateTime.Now;
-                    UserRecord userRecord = new UserRecord();
-                    userRecord.id = 930030;
-                    userRecord.mealtype = "早餐";
-                    userRecord.foodtype = "滿福堡";
-                    userRecord.lon = "122";
-                    userRecord.lat = "76";
-                    userRecord.time = time;
-                    userRecord.step = "Q1";
-                    var reusult = userRecord1.Create(connString, userRecord);
-                    Console.WriteLine("---------Dapper測試:Create模式---------");
-                    Console.WriteLine("Create:{0}", reusult ? "成功" : "失敗");
-                    break;
-                case 2:
-                    int bocci = 930030;
-                    var reusult2 = userRecord1.Load(connString, bocci);
-                    Console.WriteLine("---------Dapper測試:Load模式---------");
-                    Console.WriteLine($"Load \n{reusult2[0].id}\n{reusult2[0].mealtype}\n{reusult2[0].foodtype}\n{reusult2[0].lat}\n{reusult2[0].lon}\n{reusult2[0].step}\n{reusult2[0].time}");
+        //public void OrderFood(string text)
+        //{
+        //    string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
+        //    //UserRecordInformation userRecord = new UserRecordInformation();
+        //    UserRecordInformationDapper userRecord1 = new UserRecordInformationDapper();
+        //    int day = (int)Convert.ToUInt32(text);
+        //    switch (day)
+        //    {
+        //        case 1:
+        //            DateTime time = DateTime.Now;
+        //            UserRecord userRecord = new UserRecord();
+        //            userRecord.id = 930030;
+        //            userRecord.mealtype = "早餐";
+        //            userRecord.foodtype = "滿福堡";
+        //            userRecord.lon = "122";
+        //            userRecord.lat = "76";
+        //            userRecord.time = time;
+        //            userRecord.step = "Q1";
+        //            var reusult = userRecord1.Create(connString, userRecord);
+        //            Console.WriteLine("---------Dapper測試:Create模式---------");
+        //            Console.WriteLine("Create:{0}", reusult ? "成功" : "失敗");
+        //            break;
+        //        case 2:
+        //            int bocci = 930030;
+        //            var reusult2 = userRecord1.Load(connString, bocci);
+        //            Console.WriteLine("---------Dapper測試:Load模式---------");
+        //            Console.WriteLine($"Load \n{reusult2[0].id}\n{reusult2[0].mealtype}\n{reusult2[0].foodtype}\n{reusult2[0].lat}\n{reusult2[0].lon}\n{reusult2[0].step}\n{reusult2[0].time}");
 
-                    break;
-                case 3:
-                    DateTime time2 = DateTime.Now;
-                    UserRecord userRecord4 = new UserRecord();
-                    userRecord4.id = 930030;
-                    userRecord4.mealtype = "午餐";
-                    userRecord4.foodtype = "雞腿便當";
-                    userRecord4.lon = "122";
-                    userRecord4.lat = "76";
-                    userRecord4.time = time2;
-                    userRecord4.step = "Q1";
-                    var reusult3 = userRecord1.Update(connString, userRecord4);
-                    var arg2 = reusult3 ? "成功" : "失敗";
-                    Console.WriteLine("---------Dapper測試:Load模式---------");
-                    Console.WriteLine($"更新:{arg2}");
-                    break;
-                case 4:
-                    int bocc2 = 930030;
-                    var reusult5 = userRecord1.Delete(connString, bocc2);
-                    var arg = reusult5 ? "成功" : "失敗";
-                    Console.WriteLine("---------Dapper測試:Load模式---------");
-                    Console.WriteLine($"刪除:{arg}");
-                    break;
-                case 5:
-                    string time1 = DateTime.Now.ToString();
-                    string filePath = "/app/data/status.txt";
-                    if (File.Exists(filePath))
-                    {
-                        //讀取第一行
-                        string firstLine = File.ReadLines(filePath).First();
-                        //建檔時間
-                        DateTime time3 = DateTime.Parse(firstLine);
-                        //設定2分鐘區間
-                        TimeSpan interval = TimeSpan.FromMinutes(2);
-                        DateTime now = DateTime.Now;
-                        TimeSpan diff = now.Subtract(time3);
-                        //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
-                        if (diff.CompareTo(interval) > 0)
-                        {
-                            Console.WriteLine("超過2分鐘，將會刪除");
-                            File.Delete(filePath);
-                        }
-                        else
-                        {
-                            Console.WriteLine("未超過2分鐘");
-                        }
-                    }
-                    else
-                    {
-                        File.WriteAllText(filePath,time1);
-                        string firstLine = File.ReadLines(filePath).First();
-                        Console.WriteLine($"以建立紀錄\n{firstLine}");
-                    }
+        //            break;
+        //        case 3:
+        //            DateTime time2 = DateTime.Now;
+        //            UserRecord userRecord4 = new UserRecord();
+        //            userRecord4.id = 930030;
+        //            userRecord4.mealtype = "午餐";
+        //            userRecord4.foodtype = "雞腿便當";
+        //            userRecord4.lon = "122";
+        //            userRecord4.lat = "76";
+        //            userRecord4.time = time2;
+        //            userRecord4.step = "Q1";
+        //            var reusult3 = userRecord1.Update(connString, userRecord4);
+        //            var arg2 = reusult3 ? "成功" : "失敗";
+        //            Console.WriteLine("---------Dapper測試:Load模式---------");
+        //            Console.WriteLine($"更新:{arg2}");
+        //            break;
+        //        case 4:
+        //            int bocc2 = 930030;
+        //            var reusult5 = userRecord1.Delete(connString, bocc2);
+        //            var arg = reusult5 ? "成功" : "失敗";
+        //            Console.WriteLine("---------Dapper測試:Load模式---------");
+        //            Console.WriteLine($"刪除:{arg}");
+        //            break;
+        //        case 5:
+        //            string time1 = DateTime.Now.ToString();
+        //            string filePath = "/app/data/status.txt";
+        //            if (File.Exists(filePath))
+        //            {
+        //                //讀取第一行
+        //                string firstLine = File.ReadLines(filePath).First();
+        //                //建檔時間
+        //                DateTime time3 = DateTime.Parse(firstLine);
+        //                //設定2分鐘區間
+        //                TimeSpan interval = TimeSpan.FromMinutes(2);
+        //                DateTime now = DateTime.Now;
+        //                TimeSpan diff = now.Subtract(time3);
+        //                //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
+        //                if (diff.CompareTo(interval) > 0)
+        //                {
+        //                    Console.WriteLine("超過2分鐘，將會刪除");
+        //                    File.Delete(filePath);
+        //                }
+        //                else
+        //                {
+        //                    Console.WriteLine("未超過2分鐘");
+        //                }
+        //            }
+        //            else
+        //            {
+        //                File.WriteAllText(filePath, time1);
+        //                string firstLine = File.ReadLines(filePath).First();
+        //                Console.WriteLine($"以建立紀錄\n{firstLine}");
+        //            }
 
-                    break;
-            }
-        }
+        //            break;
+        //    }
+        //}
         #endregion
 
     }
