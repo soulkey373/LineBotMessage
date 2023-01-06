@@ -291,29 +291,29 @@ namespace LineBotMessage.Domain
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "foodType=sushi",
-                                                Label = "早餐",
-                                                DisplayText = "早餐🍳"
+                                                Label = "早餐🍳",
+                                                DisplayText = "早餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "foodType=hot-pot",
-                                                Label = "午餐",
-                                                DisplayText = "午餐🍱"
+                                                Label = "午餐🍱",
+                                                DisplayText = "午餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "foodType=steak",
-                                                Label = "晚餐 ️",
-                                                DisplayText = "晚餐 🍽️"
+                                                Label = "晚餐 🍽️",
+                                                DisplayText = "晚餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "foodType=next",
-                                                Label = "夜消",
-                                                DisplayText = "夜消🍪"
+                                                Label = "夜消🍪",
+                                                DisplayText = "夜消"
                                             }
                                         }
                                         }
@@ -372,22 +372,22 @@ namespace LineBotMessage.Domain
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "foodType=hot-pot",
-                                                Label = "午餐",
-                                                DisplayText = "午餐🍱"
+                                                Label = "午餐🍱",
+                                                DisplayText = "午餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "foodType=steak",
-                                                Label = "晚餐 ️",
-                                                DisplayText = "晚餐 🍽️"
+                                                Label = "晚餐 ️🍽",
+                                                DisplayText = "晚餐 ️"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "foodType=next",
-                                                Label = "夜消",
-                                                DisplayText = "夜消🍪"
+                                                Label = "夜消🍪",
+                                                DisplayText = "夜消"
                                             }
                                         }
                                         }
