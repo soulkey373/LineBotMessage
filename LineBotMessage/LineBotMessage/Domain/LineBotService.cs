@@ -42,54 +42,61 @@ namespace LineBotMessage.Domain
         {
             string strBody = requestBody.ToString();
             dynamic messageRequest = new BroadcastMessageRequestDto<BaseMessageDto>();
-            foreach (var eventObject in requestBody.Events)
+            foreach (WebhookEventDto eventObject in requestBody.Events)
             {
                 switch (eventObject.Type)
                 {
                     case WebhookEventTypeEnum.Message:
                         if (eventObject.Message.Type == MessageTypeEnum.Text)
                         {
-                            Console.WriteLine("進來Message的switch case");
                             await ReceiveMessageWebhookEvent(eventObject);
                         }
                         //OrderFood(eventObject.Message.Text.Trim());
                         break;
 
-                        #region 其他情境
-                        //case WebhookEventTypeEnum.Unsend:
-                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}在聊天室收回訊息！");
-                        //    break;
-                        //case WebhookEventTypeEnum.Follow:
-                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}將我們新增為好友！");
-                        //    break;
-                        //case WebhookEventTypeEnum.Unfollow:
-                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}封鎖了我們！");
-                        //    break;
-                        //case WebhookEventTypeEnum.Join:
-                        //    Console.WriteLine("我們被邀請進入聊天室了！");
-                        //    break;
-                        //case WebhookEventTypeEnum.Leave:
-                        //    Console.WriteLine("我們被聊天室踢出了");
-                        //    break;
-                        //case WebhookEventTypeEnum.MemberJoined:
-                        //    string joinedMemberIds = "";
-                        //    foreach (var member in eventObject.Joined.Members)
-                        //    {
-                        //        joinedMemberIds += $"{member.UserId} ";
-                        //    }
-                        //    Console.WriteLine($"使用者{joinedMemberIds}加入了群組！");
-                        //    break;
-                        //case WebhookEventTypeEnum.MemberLeft:
-                        //    string leftMemberIds = "";
-                        //    foreach (var member in eventObject.Left.Members)
-                        //    {
-                        //        leftMemberIds += $"{member.UserId} ";
-                        //    }
-                        //    Console.WriteLine($"使用者{leftMemberIds}離開了群組！");
-                        //    break;
-                        //case WebhookEventTypeEnum.Postback:
-                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}觸發了postback事件");
-                        //    break;
+                    #region 其他情境
+                    //case WebhookEventTypeEnum.Unsend:
+                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}在聊天室收回訊息！");
+                    //    break;
+                    //case WebhookEventTypeEnum.Follow:
+                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}將我們新增為好友！");
+                    //    break;
+                    //case WebhookEventTypeEnum.Unfollow:
+                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}封鎖了我們！");
+                    //    break;
+                    //case WebhookEventTypeEnum.Join:
+                    //    Console.WriteLine("我們被邀請進入聊天室了！");
+                    //    break;
+                    //case WebhookEventTypeEnum.Leave:
+                    //    Console.WriteLine("我們被聊天室踢出了");
+                    //    break;
+                    //case WebhookEventTypeEnum.MemberJoined:
+                    //    string joinedMemberIds = "";
+                    //    foreach (var member in eventObject.Joined.Members)
+                    //    {
+                    //        joinedMemberIds += $"{member.UserId} ";
+                    //    }
+                    //    Console.WriteLine($"使用者{joinedMemberIds}加入了群組！");
+                    //    break;
+                    //case WebhookEventTypeEnum.MemberLeft:
+                    //    string leftMemberIds = "";
+                    //    foreach (var member in eventObject.Left.Members)
+                    //    {
+                    //        leftMemberIds += $"{member.UserId} ";
+                    //    }
+                    //    Console.WriteLine($"使用者{leftMemberIds}離開了群組！");
+                    //    break;
+                    case WebhookEventTypeEnum.Postback:
+                        Console.WriteLine($"userID : \n{eventObject.Source.UserId}觸發了postback事件");
+                        Console.WriteLine($"GroupID : \n{eventObject.Source.GroupId}觸發了postback事件");
+                        Console.WriteLine($"Postback內容:{eventObject.Postback.Data.Trim()}");
+
+                       
+
+
+
+
+                        break;
                         //case WebhookEventTypeEnum.VideoPlayComplete:
                         //    Console.WriteLine($"使用者{eventObject.Source.UserId}");
                         //    break;
@@ -264,7 +271,7 @@ namespace LineBotMessage.Domain
                         //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
                         if (diff.CompareTo(interval) > 0)
                         {
-                            Console.WriteLine("超過1分鐘，將刪除紀錄");
+                            Console.WriteLine("前一次啟用系統超過1分鐘，將刪除紀錄");
                             File.Delete(filePath);
                             DateTime now1 = DateTime.Now;
                             File.WriteAllText(filePath, now1.ToString());
@@ -290,28 +297,28 @@ namespace LineBotMessage.Domain
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "foodType=sushi",
+                                                Data = "早餐",
                                                 Label = "早餐🍳",
                                                 DisplayText = "早餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "foodType=hot-pot",
+                                                Data = "午餐",
                                                 Label = "午餐🍱",
                                                 DisplayText = "午餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "foodType=steak",
+                                                Data = "晚餐",
                                                 Label = "晚餐 🍽️",
                                                 DisplayText = "晚餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "foodType=next",
+                                                Data = "夜消",
                                                 Label = "夜消🍪",
                                                 DisplayText = "夜消"
                                             }
@@ -364,28 +371,28 @@ namespace LineBotMessage.Domain
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "foodType=sushi",
+                                                Data = "早餐",
                                                 Label = "早餐",
                                                 DisplayText = "早餐🍳"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "foodType=hot-pot",
+                                                Data = "午餐",
                                                 Label = "午餐🍱",
                                                 DisplayText = "午餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "foodType=steak",
+                                                Data = "晚餐",
                                                 Label = "晚餐 ️🍽",
                                                 DisplayText = "晚餐 ️"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "foodType=next",
+                                                Data = "夜消",
                                                 Label = "夜消🍪",
                                                 DisplayText = "夜消"
                                             }
