@@ -87,11 +87,28 @@ namespace LineBotMessage.Domain
                     //    Console.WriteLine($"使用者{leftMemberIds}離開了群組！");
                     //    break;
                     case WebhookEventTypeEnum.Postback:
-                        Console.WriteLine($"userID : \n{eventObject.Source.UserId}觸發了postback事件");
-                        Console.WriteLine($"GroupID : \n{eventObject.Source.GroupId}觸發了postback事件");
-                        Console.WriteLine($"Postback內容:{eventObject.Postback.Data.Trim()}");
+                        //Console.WriteLine("近來Postback");
+                        //Console.WriteLine($"userID : \n{eventObject.Source.UserId}");
+                        //Console.WriteLine($"GroupID : \n{eventObject.Source.GroupId}");
+                        //Console.WriteLine($"Postback內容:{eventObject.Postback.Data.Trim()}");
+                        try
+                        {
+                            string? userID = eventObject.Source.GroupId;
+                            string postdata = eventObject.Postback.Data.Trim();
+                            string filePath = "/app/data/status.txt";
+                            if (File.Exists(filePath))
+                            {                   
+                                OrderFoodPhase1(userID, postdata);
+                            }
+                            Console.WriteLine("OrderFoodPhase1完成!");
+                        }
+                        catch(Exception ex)
+                        {
+                            Console.WriteLine("儲存meal的過程發生錯誤{0}",ex.ToString());
+                        }
+                         
 
-                       
+
 
 
 
@@ -276,7 +293,6 @@ namespace LineBotMessage.Domain
                             DateTime now1 = DateTime.Now;
                             File.WriteAllText(filePath, now1.ToString());
                             Console.WriteLine($"以建立點餐紀錄\n{firstLine}");
-
                             ReplyMessageRequestDto<TemplateMessageDto<ButtonsTemplateDto>>? replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<ButtonsTemplateDto>>
                             {
                                 ReplyToken = eventObject.ReplyToken,
@@ -433,6 +449,17 @@ namespace LineBotMessage.Domain
                 Console.WriteLine("回復訊息失敗!\n" + ex.ToString());
             }
 
+        }
+
+        public void OrderFoodPhase1(string userID,string mealtype)
+        {
+            Console.WriteLine("進到OrderFoodPhase1");
+            string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
+            UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+            UserRecord record = new UserRecord();
+            record.id = userID;
+            record.mealtype = mealtype;
+            informationDapper.Create(connString, record);
         }
 
         #region 文字天氣

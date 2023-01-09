@@ -2,7 +2,7 @@
 {
     public class UserRecord
     {
-        public int id { get; set; }
+        public string? id { get; set; }
         public string? mealtype { get; set; }
         public string? foodtype { get; set; }
         public string? lat { get; set; }

@@ -58,6 +58,13 @@ namespace LineBotMessage.DbConn
                     Console.WriteLine("Create 出現錯誤：" + ex.Message);
                     return false;
                 }
+                finally
+                { 
+                    conn.Close();
+                    Console.WriteLine("紀錄meal成功");
+                }
+
+
             }
         }
 
