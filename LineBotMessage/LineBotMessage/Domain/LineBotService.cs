@@ -98,7 +98,7 @@ namespace LineBotMessage.Domain
                             string filePath = "/app/data/status.txt";
                             if (File.Exists(filePath))
                             {                   
-                                OrderFoodPhase1(userID, postdata);
+                                OrderFoodPhase1(userID, postdata,"10");
                             }
                             Console.WriteLine("OrderFoodPhase1完成!");
                         }
@@ -277,6 +277,7 @@ namespace LineBotMessage.Domain
                     string filePath = "/app/data/status.txt";
                     if (File.Exists(filePath))
                     {
+                       
                         //讀取第一行
                         string firstLine = File.ReadLines(filePath).First();
                         //建檔時間
@@ -290,6 +291,8 @@ namespace LineBotMessage.Domain
                         {
                             Console.WriteLine("前一次啟用系統超過1分鐘，將刪除紀錄");
                             File.Delete(filePath);
+                            UserRecordInformationDapper userRecord = new UserRecordInformationDapper();
+                            userRecord.Delete();
                             DateTime now1 = DateTime.Now;
                             File.WriteAllText(filePath, now1.ToString());
                             Console.WriteLine($"以建立點餐紀錄\n{firstLine}");
@@ -451,15 +454,15 @@ namespace LineBotMessage.Domain
 
         }
 
-        public void OrderFoodPhase1(string userID,string mealtype)
+        public void OrderFoodPhase1(string userID,string mealtype,string step)
         {
             Console.WriteLine("進到OrderFoodPhase1");
-            string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
             UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
             UserRecord record = new UserRecord();
             record.id = userID;
             record.mealtype = mealtype;
-            informationDapper.Create(connString, record);
+            record.step = step;
+            informationDapper.Create(record);
         }
 
         #region 文字天氣

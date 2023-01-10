@@ -13,7 +13,7 @@ namespace LineBotMessage.DbConn
 {
     public class UserRecordInformationDapper
     {
-        enum ActionType { CREATE, UPDATE };
+        private string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
         public static NpgsqlConnection OpenConnection(string connstr)
         {
             NpgsqlConnection conn = new NpgsqlConnection(connstr);
@@ -21,11 +21,11 @@ namespace LineBotMessage.DbConn
             return conn;
         }
 
-        public IList<UserRecord> Load(string _connStr, int id)
+        public IList<UserRecord> Load(int id)
         {
             IList<UserRecord> list;
 
-            using (var conn = OpenConnection(_connStr))
+            using (var conn = OpenConnection(connString))
             {
                 try
                 {
@@ -40,11 +40,11 @@ namespace LineBotMessage.DbConn
                 }
             }
         }
-        public bool Create(string _connStr, UserRecord record)
+        public bool Create( UserRecord record)
         {
             IList<UserRecord> list;
 
-            using (var conn = OpenConnection(_connStr))
+            using (var conn = OpenConnection(connString))
             {
                 try
                 {
@@ -68,9 +68,9 @@ namespace LineBotMessage.DbConn
             }
         }
 
-        public bool Update(string _connStr, UserRecord record)
+        public bool Update( UserRecord record)
         {
-            using (var conn = OpenConnection(_connStr))
+            using (var conn = OpenConnection(connString))
             {
                 try
                 {
@@ -86,14 +86,14 @@ namespace LineBotMessage.DbConn
                 }
             }
         }
-        public bool Delete(string _connStr, int id)
+        public bool Delete()
         {
-            using (var conn = OpenConnection(_connStr))
+            using (var conn = OpenConnection(connString))
             {
                 try
                 {
-                    string deleteSQL = "DELETE FROM UserRecord WHERE Id=@Id";
-                    conn.Execute(deleteSQL, new { Id = id });
+                    string deleteSQL = "DELETE FROM UserRecord ";
+                    conn.Execute(deleteSQL);
                     return true;
                 }
                 catch (Exception ex)
