@@ -21,7 +21,7 @@ namespace LineBotMessage.DbConn
             return conn;
         }
 
-        public IList<UserRecord> Load(int id)
+        public IList<UserRecord> Load()
         {
             IList<UserRecord> list;
 
@@ -29,8 +29,9 @@ namespace LineBotMessage.DbConn
             {
                 try
                 {
-                    string querySQL = "SELECT*FROM UserRecord WHERE 1=1 AND Id=@Id";
-                    list = conn.Query<UserRecord>(querySQL, new { Id = id }).ToList();
+                    string querySQL = "SELECT*FROM UserRecord ";
+                    list = conn.Query<UserRecord>(querySQL).ToList();
+                    Console.WriteLine("Load有: {0} 筆", list.Count);
                     return list;
                 }
                 catch (Exception ex)

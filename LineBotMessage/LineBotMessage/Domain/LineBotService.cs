@@ -47,80 +47,36 @@ namespace LineBotMessage.Domain
                 switch (eventObject.Type)
                 {
                     case WebhookEventTypeEnum.Message:
-                        if (eventObject.Message.Type == MessageTypeEnum.Text)
-                        {
-                            await ReceiveMessageWebhookEvent(eventObject);
-                        }
-                        //OrderFood(eventObject.Message.Text.Trim());
-                        break;
-
-                    #region 其他情境
-                    //case WebhookEventTypeEnum.Unsend:
-                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}在聊天室收回訊息！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Follow:
-                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}將我們新增為好友！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Unfollow:
-                    //    Console.WriteLine($"使用者{eventObject.Source.UserId}封鎖了我們！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Join:
-                    //    Console.WriteLine("我們被邀請進入聊天室了！");
-                    //    break;
-                    //case WebhookEventTypeEnum.Leave:
-                    //    Console.WriteLine("我們被聊天室踢出了");
-                    //    break;
-                    //case WebhookEventTypeEnum.MemberJoined:
-                    //    string joinedMemberIds = "";
-                    //    foreach (var member in eventObject.Joined.Members)
-                    //    {
-                    //        joinedMemberIds += $"{member.UserId} ";
-                    //    }
-                    //    Console.WriteLine($"使用者{joinedMemberIds}加入了群組！");
-                    //    break;
-                    //case WebhookEventTypeEnum.MemberLeft:
-                    //    string leftMemberIds = "";
-                    //    foreach (var member in eventObject.Left.Members)
-                    //    {
-                    //        leftMemberIds += $"{member.UserId} ";
-                    //    }
-                    //    Console.WriteLine($"使用者{leftMemberIds}離開了群組！");
-                    //    break;
-                    case WebhookEventTypeEnum.Postback:
-                        //Console.WriteLine("近來Postback");
-                        //Console.WriteLine($"userID : \n{eventObject.Source.UserId}");
-                        //Console.WriteLine($"GroupID : \n{eventObject.Source.GroupId}");
-                        //Console.WriteLine($"Postback內容:{eventObject.Postback.Data.Trim()}");
                         try
                         {
-                            string? userID = eventObject.Source.GroupId;
-                            string postdata = eventObject.Postback.Data.Trim();
-                            string filePath = "/app/data/status.txt";
-                            if (File.Exists(filePath))
-                            {                   
-                                OrderFoodPhase1(userID, postdata,"10");
+                            if (eventObject.Message.Type == MessageTypeEnum.Text)
+                            {
+                                await ReceiveMessageWebhookEvent(eventObject);
                             }
-                            Console.WriteLine("OrderFoodPhase1完成!");
                         }
                         catch(Exception ex)
                         {
-                            Console.WriteLine("儲存meal的過程發生錯誤{0}",ex.ToString());
+                            Console.WriteLine("WebhookEventTypeEnum.Message過程發生錯誤\n{0}", ex.ToString());
                         }
-                         
-
-
-
-
-
-
                         break;
-                        //case WebhookEventTypeEnum.VideoPlayComplete:
-                        //    Console.WriteLine($"使用者{eventObject.Source.UserId}");
-                        //    break;
-                        //case MessageTypeEnum.Location:
-                        //    messageRequest = _jsonProvider.Deserialize<BroadcastMessageRequestDto<LocationMesssageDto>>(strBody);
-                        //    break;
-                        #endregion
+                    case WebhookEventTypeEnum.Postback:
+
+                        try
+                        {
+                            string? userID = eventObject.Source.UserId;
+                            string postdata = eventObject.Postback.Data.Trim();
+                            string filePath = "/app/data/status.txt";
+                            if (File.Exists(filePath))
+                            {
+                                OrderFoodPhase1(userID, postdata, "10");
+                            }
+                            Console.WriteLine("OrderFoodPhase1完成!");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("儲存meal的過程發生錯誤{0}", ex.ToString());
+                        }
+                        break;
                 }
             }
         }
@@ -151,6 +107,7 @@ namespace LineBotMessage.Domain
 
             if (eventObject.Message.Text != "" && eventObject.Message.Text != null)
             {
+                string filePath = "/app/data/status.txt";
                 #region 當使用者鍵入"天氣時"
                 //if (eventObject.Message.Text.Trim() == "天氣")
                 //{
@@ -274,10 +231,10 @@ namespace LineBotMessage.Domain
 
                 if (eventObject.Message.Text.Trim() == "吃什麼")
                 {
-                    string filePath = "/app/data/status.txt";
+                    Console.WriteLine("進來吃什麼系統");
+
                     if (File.Exists(filePath))
                     {
-                       
                         //讀取第一行
                         string firstLine = File.ReadLines(filePath).First();
                         //建檔時間
@@ -364,7 +321,6 @@ namespace LineBotMessage.Domain
                     }
                     else
                     {
-
                         DateTime now = DateTime.Now;
                         File.WriteAllText(filePath, now.ToString());
                         string firstLine = File.ReadLines(filePath).First();
@@ -411,7 +367,7 @@ namespace LineBotMessage.Domain
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "夜消",
+                                                Data = "消夜",
                                                 Label = "夜消🍪",
                                                 DisplayText = "夜消"
                                             }
@@ -421,8 +377,32 @@ namespace LineBotMessage.Domain
                                 }
                         };
                         ReplyMessage(replyMessage1);
-
                     }
+                    return;
+                }
+
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        string? userid = eventObject.Source.UserId;
+                        UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+                        IList<UserRecord>? result = informationDapper.Load();
+                        Console.WriteLine("目前step:{0}",result[0].step);
+                        if (eventObject.Source.UserId == result[0].id)
+                        {
+                            string foodtype = eventObject.Message.Text.Trim();
+                            string mealtype = result[0].mealtype;
+                            OrderFoodPhase2(userid, mealtype,foodtype, "20");
+                            Console.WriteLine("OrderFoodPhase2完成!");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+
+
                 }
                 #endregion
 
@@ -454,7 +434,7 @@ namespace LineBotMessage.Domain
 
         }
 
-        public void OrderFoodPhase1(string userID,string mealtype,string step)
+        public void OrderFoodPhase1(string userID, string mealtype, string step)
         {
             Console.WriteLine("進到OrderFoodPhase1");
             UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
@@ -463,6 +443,16 @@ namespace LineBotMessage.Domain
             record.mealtype = mealtype;
             record.step = step;
             informationDapper.Create(record);
+        }
+        public void OrderFoodPhase2(string userID,string mealtype, string foodtype, string step)
+        {
+            UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+            UserRecord record = new UserRecord();
+            record.id = userID;
+            record.mealtype = mealtype;
+            record.foodtype = foodtype;
+            record.step = step;
+            informationDapper.Update(record);
         }
 
         #region 文字天氣
