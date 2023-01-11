@@ -425,7 +425,7 @@ namespace LineBotMessage.Domain
                 };
 
                 HttpResponseMessage response = await client.SendAsync(requestMessage);
-                Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
+                //Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
             }
             catch (Exception ex)
             {
