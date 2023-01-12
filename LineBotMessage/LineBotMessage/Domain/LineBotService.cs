@@ -53,6 +53,27 @@ namespace LineBotMessage.Domain
                             {
                                 await ReceiveMessageWebhookEvent(eventObject);
                             }
+                            if(eventObject.Message.Type == MessageTypeEnum.Location)
+                            {
+                                string filePath = "/app/data/status.txt";
+                                if (File.Exists(filePath))
+                                {
+                                    UserRecordInformationDapper userRecord = new UserRecordInformationDapper();
+                                    var result = userRecord.Load();
+                                    UserRecord? xuserRecord = result[0];
+                                    string lat = Convert.ToString(eventObject.Message.Latitude);
+                                    string lon = Convert.ToString(eventObject.Message.Longitude);
+                                    OrderFoodPhase3(xuserRecord.id, xuserRecord.mealtype, xuserRecord.foodtype, lat, lon, "30");
+                                    Console.WriteLine("OrderFoodPhase3完成");
+                                    //ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>> replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>>();
+                                    //replyMessage1.ReplyToken = eventObject.ReplyToken;
+                                    //replyMessage1.Messages = new List<TemplateMessageDto<CarouselTemplateDto>>();
+                                    //TemplateMessageDto<CarouselTemplateDto> templateMessage = new TemplateMessageDto<CarouselTemplateDto>();
+
+                                    //replyMessage1.Messages.Add(templateMessage);
+                                }
+
+                            }
                         }
                         catch(Exception ex)
                         {
@@ -71,12 +92,20 @@ namespace LineBotMessage.Domain
                                 OrderFoodPhase1(userID, postdata, "10");
                             }
                             Console.WriteLine("OrderFoodPhase1完成!");
+                            ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+                            replyMessage.ReplyToken = eventObject.ReplyToken;
+                            replyMessage.Messages = new List<TextMessageDto>();
+                            TextMessageDto textMessage = new TextMessageDto();
+                            textMessage.Text = "請輸入您想要的食物: 🤔\ne.g. 牛排🥩, 拉麵 🍜";
+                            replyMessage.Messages.Add(textMessage);
+                            ReplyMessage(replyMessage);
                         }
                         catch (Exception ex)
                         {
                             Console.WriteLine("儲存meal的過程發生錯誤{0}", ex.ToString());
                         }
                         break;
+      
                 }
             }
         }
@@ -395,6 +424,31 @@ namespace LineBotMessage.Domain
                             string mealtype = result[0].mealtype;
                             OrderFoodPhase2(userid, mealtype,foodtype, "20");
                             Console.WriteLine("OrderFoodPhase2完成!");
+                            replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                            {
+                                ReplyToken = eventObject.ReplyToken,
+                                Messages = new List<TextMessageDto>
+                                    {
+                                         new TextMessageDto
+                                         {
+                                            Text ="請點擊下方的按鈕，打開地圖並輸入搜尋位置 📍",
+                                            QuickReply = new QuickReplyItemDto
+                                            {
+                                                 Items = new List<QuickReplyButtonDto>
+                                                 {
+                                                          // location action
+                                                        new QuickReplyButtonDto {
+                                                            Action = new ActionDto {
+                                                                Type = ActionTypeEnum.Location,
+                                                                Label = "開啟位置"
+                                                            }
+                                                        }
+                                                 }
+                                            }
+                                         }
+                                    }
+                            };
+                            ReplyMessage(replyMessage);
                         }
                     }
                     catch (Exception ex)
@@ -454,7 +508,22 @@ namespace LineBotMessage.Domain
             record.step = step;
             informationDapper.Update(record);
         }
+        public void OrderFoodPhase3(string userID, string mealtype, string foodtype,string Lat,string Lon, string step)
+        {
+            UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+            UserRecord record = new UserRecord();
+            record.id = userID;
+            record.mealtype = mealtype;
+            record.foodtype = foodtype;
+            record.lat = Lat;
+            record.lon = Lon;
+            record.step = step;
+            informationDapper.Update(record);
+        }
+        public void OrderFoodPhase4()
+        {
 
+        }
         #region 文字天氣
         //static async Task<string> GetWeather()
         //{
