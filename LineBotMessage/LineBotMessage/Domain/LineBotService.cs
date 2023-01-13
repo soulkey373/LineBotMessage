@@ -19,6 +19,7 @@ using System.Data;
 using LineBotMessage.DbConn;
 using Microsoft.Build.Tasks;
 using System.Collections.Generic;
+using System.Net.Http;
 
 namespace LineBotMessage.Domain
 {
@@ -53,7 +54,7 @@ namespace LineBotMessage.Domain
                             {
                                 await ReceiveMessageWebhookEvent(eventObject);
                             }
-                            if(eventObject.Message.Type == MessageTypeEnum.Location)
+                            if (eventObject.Message.Type == MessageTypeEnum.Location)
                             {
                                 string filePath = "/app/data/status.txt";
                                 if (File.Exists(filePath))
@@ -65,17 +66,57 @@ namespace LineBotMessage.Domain
                                     string lon = Convert.ToString(eventObject.Message.Longitude);
                                     OrderFoodPhase3(xuserRecord.id, xuserRecord.mealtype, xuserRecord.foodtype, lat, lon, "30");
                                     Console.WriteLine("OrderFoodPhase3完成");
-                                    //ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>> replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>>();
-                                    //replyMessage1.ReplyToken = eventObject.ReplyToken;
-                                    //replyMessage1.Messages = new List<TemplateMessageDto<CarouselTemplateDto>>();
-                                    //TemplateMessageDto<CarouselTemplateDto> templateMessage = new TemplateMessageDto<CarouselTemplateDto>();
+                                    ReplyMessageRequestDto<TemplateMessageDto<ImageCarouselTemplateDto>> replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<ImageCarouselTemplateDto>>();
+                                    replyMessage1.ReplyToken = eventObject.ReplyToken;
+                                    replyMessage1.Messages = new List<TemplateMessageDto<ImageCarouselTemplateDto>>();
+                                    TemplateMessageDto<ImageCarouselTemplateDto> templateMessage = new TemplateMessageDto<ImageCarouselTemplateDto>
+                                    {
+                                        AltText = "請選您要吃的價位~",
+                                        Template = new ImageCarouselTemplateDto
+                                        {
+                                            Columns = new List<ImageCarouselColumnObjectDto>
+                                            {
+                                                 new ImageCarouselColumnObjectDto
+                                                 {
+                                                      ImageUrl="https://3.bp.blogspot.com/-EmZVRJnXsGA/V-yCZuwAUjI/AAAAAAAA-KE/VDeCip5CT3EzOIB7TDA8AIjuhrTmBbL8QCLcB/s800/binbou_man.png",
+                                                      Action = new ActionDto
+                                                      {
+                                                           Type = ActionTypeEnum.Postback,
+                                                           Label = "我現在是窮光蛋",
+                                                           Data="low"
+                                                      }
+                                                 },
+                                                 new ImageCarouselColumnObjectDto
+                                                 {
+                                                      ImageUrl="https://1.bp.blogspot.com/-XeLDe3ylSIY/XWS5pVa7TjI/AAAAAAABUVI/VpLH_IIPkA8PaiGVCRr7sYOnJmuIp-2qQCLcBGAs/s1600/kakedasu_suit1.png",
+                                                      Action = new ActionDto
+                                                      {
+                                                           Type = ActionTypeEnum.Postback,
+                                                           Label = "才月中，安全啦",
+                                                           Data="mid"
+                                                      }
+                                                 },
+                                                 new ImageCarouselColumnObjectDto
+                                                 {
+                                                      ImageUrl="https://1.bp.blogspot.com/-Ln1T9C2aorc/WJmUlZXld2I/AAAAAAABBhI/1jGLOzMNIOYsoBjf652x3HNfHBOLZz0pQCLcB/s800/kyuryou_bonus_man2.png",
+                                                      Action = new ActionDto
+                                                      {
+                                                           Type = ActionTypeEnum.Postback,
+                                                           Label = "我剛領薪水啦",
+                                                           Data="high"
+                                                      }
+                                                 }
+                                            }
+                                        }
+                                    };
 
-                                    //replyMessage1.Messages.Add(templateMessage);
+                                    replyMessage1.Messages.Add(templateMessage);
+                                    ReplyMessage(replyMessage1);
                                 }
 
                             }
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             Console.WriteLine("WebhookEventTypeEnum.Message過程發生錯誤\n{0}", ex.ToString());
                         }
@@ -87,25 +128,53 @@ namespace LineBotMessage.Domain
                             string? userID = eventObject.Source.UserId;
                             string postdata = eventObject.Postback.Data.Trim();
                             string filePath = "/app/data/status.txt";
-                            if (File.Exists(filePath))
+                            if (postdata=="早餐"|| postdata=="午餐"|| postdata=="晚餐"|| postdata=="夜消")
                             {
-                                OrderFoodPhase1(userID, postdata, "10");
+                               
+                                if (File.Exists(filePath))
+                                {
+                                    OrderFoodPhase1(userID, postdata, "10");
+                                }
+                                Console.WriteLine("OrderFoodPhase1完成!");
+                                ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+                                replyMessage.ReplyToken = eventObject.ReplyToken;
+                                replyMessage.Messages = new List<TextMessageDto>();
+                                TextMessageDto textMessage = new TextMessageDto();
+                                textMessage.Text = "請輸入您想要的食物: 🤔\ne.g. 牛排🥩, 拉麵 🍜";
+                                replyMessage.Messages.Add(textMessage);
+                                ReplyMessage(replyMessage);
                             }
-                            Console.WriteLine("OrderFoodPhase1完成!");
-                            ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
-                            replyMessage.ReplyToken = eventObject.ReplyToken;
-                            replyMessage.Messages = new List<TextMessageDto>();
-                            TextMessageDto textMessage = new TextMessageDto();
-                            textMessage.Text = "請輸入您想要的食物: 🤔\ne.g. 牛排🥩, 拉麵 🍜";
-                            replyMessage.Messages.Add(textMessage);
-                            ReplyMessage(replyMessage);
+                            else if(postdata=="low"|| postdata=="mid"|| postdata == "high")
+                            {
+                                if (File.Exists(filePath))
+                                {
+                                    UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+                                    IList<UserRecord>? result = informationDapper.Load();
+                                    UserRecord Xresult = result[0];
+                                    OrderFoodPhase4(userID, Xresult.mealtype, Xresult.foodtype, Xresult.lat, Xresult.lon, "40", postdata);
+                                }
+                                string result1 = "";
+                                if(postdata == "low") { result1 = "低價位"; };
+                                if(postdata == "mid") { result1 = "中價位"; };
+                                if(postdata == "high") { result1 = "高價位"; };
+                                ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+                                replyMessage.ReplyToken = eventObject.ReplyToken;
+                                replyMessage.Messages = new List<TextMessageDto>();
+                                TextMessageDto textMessage = new TextMessageDto();
+                                textMessage.Text = $"您輸入:{result1}";
+                                replyMessage.Messages.Add(textMessage);
+                                ReplyMessage(replyMessage);
+                                OrderFoodPhase5();
+                            }
+
+
                         }
                         catch (Exception ex)
                         {
                             Console.WriteLine("儲存meal的過程發生錯誤{0}", ex.ToString());
                         }
                         break;
-      
+
                 }
             }
         }
@@ -417,12 +486,12 @@ namespace LineBotMessage.Domain
                         string? userid = eventObject.Source.UserId;
                         UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
                         IList<UserRecord>? result = informationDapper.Load();
-                        Console.WriteLine("目前step:{0}",result[0].step);
+                        Console.WriteLine("目前step:{0}", result[0].step);
                         if (eventObject.Source.UserId == result[0].id)
                         {
                             string foodtype = eventObject.Message.Text.Trim();
                             string mealtype = result[0].mealtype;
-                            OrderFoodPhase2(userid, mealtype,foodtype, "20");
+                            OrderFoodPhase2(userid, mealtype, foodtype, "20");
                             Console.WriteLine("OrderFoodPhase2完成!");
                             replyMessage = new ReplyMessageRequestDto<TextMessageDto>
                             {
@@ -498,8 +567,9 @@ namespace LineBotMessage.Domain
             record.step = step;
             informationDapper.Create(record);
         }
-        public void OrderFoodPhase2(string userID,string mealtype, string foodtype, string step)
+        public void OrderFoodPhase2(string userID, string mealtype, string foodtype, string step)
         {
+            Console.WriteLine("進到OrderFoodPhase2");
             UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
             UserRecord record = new UserRecord();
             record.id = userID;
@@ -508,8 +578,9 @@ namespace LineBotMessage.Domain
             record.step = step;
             informationDapper.Update(record);
         }
-        public void OrderFoodPhase3(string userID, string mealtype, string foodtype,string Lat,string Lon, string step)
+        public void OrderFoodPhase3(string userID, string mealtype, string foodtype, string Lat, string Lon, string step)
         {
+            Console.WriteLine("進到OrderFoodPhase3");
             UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
             UserRecord record = new UserRecord();
             record.id = userID;
@@ -519,9 +590,54 @@ namespace LineBotMessage.Domain
             record.lon = Lon;
             record.step = step;
             informationDapper.Update(record);
+            Console.WriteLine("OrderFoodPhase3完成");
         }
-        public void OrderFoodPhase4()
+        public void OrderFoodPhase4(string userID, string mealtype, string foodtype, string Lat, string Lon, string step,string budget)
         {
+            Console.WriteLine("進到OrderFoodPhase4");
+            UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+            UserRecord record = new UserRecord();
+            record.id = userID;
+            record.mealtype = mealtype;
+            record.foodtype = foodtype;
+            record.lat = Lat;
+            record.lon = Lon;
+            record.step = step;
+            record.budget= budget;
+            informationDapper.Update(record);
+            Console.WriteLine("OrderFoodPhase4完成");
+        }
+
+        public async void OrderFoodPhase5()
+        {
+            Console.WriteLine("進到OrderFoodPhase5");
+            UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+            UserRecord? result = informationDapper.Load().First();
+            // Replace YOUR_API_KEY with your actual API key
+            string apiKey = "AIzaSyDPPsEaO_DDA8B4GQneWuztLgqFERD5aB0";
+
+            // Set the location and radius for the search
+            int budget=0;
+            string location = result.lat+","+result.lon;
+            string radius = "2000";
+            string type = result.foodtype;
+            string query = result.mealtype;
+            if (result.budget == "low") { budget = 1; }
+            if (result.budget == "mid") { budget = 2; }
+            if (result.budget == "high") { budget = 3; }
+            // Create the request URL
+            string url = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={location}&radius={radius}$query={query}&type={type}&key={apiKey}";
+            Console.WriteLine(url);
+            // Send the request and get the response
+            using (var client = new HttpClient())
+            {
+                var response = await client.GetAsync(url);
+                var content = await response.Content.ReadAsStringAsync();
+                var results = JsonConvert.DeserializeObject<PlacesApiResponse>(content);
+                var restaurants = results.Results.Where(r => r.Price_level == budget);
+                Console.WriteLine(JsonConvert.SerializeObject(restaurants));
+            }
+            Console.WriteLine("OrderFoodPhase5完成");
 
         }
         #region 文字天氣

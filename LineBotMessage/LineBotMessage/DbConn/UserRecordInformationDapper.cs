@@ -76,7 +76,7 @@ namespace LineBotMessage.DbConn
                 try
                 {
                     string updateSQL = @"UPDATE UserRecord SET MealType=@MealType, FoodType=@FoodType, 
-                                Lat=@Lat, Lon=@Lon, Step=@Step, Time=@Time WHERE Id=@Id";
+                                Lat=@Lat, Lon=@Lon, Step=@Step, Time=@Time,budget=@budget WHERE Id=@Id";
                     conn.Execute(updateSQL, record);
                     return true;
                 }

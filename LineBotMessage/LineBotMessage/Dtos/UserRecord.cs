@@ -9,5 +9,6 @@
         public string? lon { get; set; }
         public string? step { get; set; }
         public DateTime? time { get; set; }
+        public string? budget { get; set; }
     }
 }
