@@ -56,8 +56,7 @@ namespace LineBotMessage.Domain
                             }
                             if (eventObject.Message.Type == MessageTypeEnum.Location)
                             {
-                                string filePath = "/app/data/status.txt";
-                                if (File.Exists(filePath))
+                                if (JudgeExsitLog())
                                 {
                                     UserRecordInformationDapper userRecord = new UserRecordInformationDapper();
                                     var result = userRecord.Load();
@@ -113,6 +112,22 @@ namespace LineBotMessage.Domain
                                     replyMessage1.Messages.Add(templateMessage);
                                     ReplyMessage(replyMessage1);
                                 }
+                                else
+                                {
+                                    ReplyMessageRequestDto<TextMessageDto> replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>();
+                                    replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>
+                                    {
+                                        ReplyToken = eventObject.ReplyToken,
+                                        Messages = new List<TextMessageDto>
+                                        {
+                                            new TextMessageDto
+                                            {
+                                                Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
+                                            }
+                                         }
+                                    };
+                                    ReplyMessage(replyMessage1);
+                                }
 
                             }
                         }
@@ -128,43 +143,80 @@ namespace LineBotMessage.Domain
                             string? userID = eventObject.Source.UserId;
                             string postdata = eventObject.Postback.Data.Trim();
                             string filePath = "/app/data/status.txt";
-                            if (postdata=="早餐"|| postdata=="午餐"|| postdata=="晚餐"|| postdata=="夜消")
+                            if (postdata == "早餐" || postdata == "午餐" || postdata == "晚餐" || postdata == "夜消")
                             {
-                               
-                                if (File.Exists(filePath))
+                                if (JudgeExsitLog())
                                 {
                                     OrderFoodPhase1(userID, postdata, "10");
+                                    Console.WriteLine("OrderFoodPhase1完成!");
+                                    ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+                                    replyMessage.ReplyToken = eventObject.ReplyToken;
+                                    replyMessage.Messages = new List<TextMessageDto>();
+                                    TextMessageDto textMessage = new TextMessageDto();
+                                    textMessage.Text = "請輸入您想要的食物: 🤔\ne.g. 牛排🥩, 拉麵 🍜";
+                                    replyMessage.Messages.Add(textMessage);
+                                    ReplyMessage(replyMessage);
                                 }
-                                Console.WriteLine("OrderFoodPhase1完成!");
-                                ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
-                                replyMessage.ReplyToken = eventObject.ReplyToken;
-                                replyMessage.Messages = new List<TextMessageDto>();
-                                TextMessageDto textMessage = new TextMessageDto();
-                                textMessage.Text = "請輸入您想要的食物: 🤔\ne.g. 牛排🥩, 拉麵 🍜";
-                                replyMessage.Messages.Add(textMessage);
-                                ReplyMessage(replyMessage);
+                                else
+                                {
+                                    ReplyMessageRequestDto<TextMessageDto> replyMessage;
+                                    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                                    {
+                                        ReplyToken = eventObject.ReplyToken,
+                                        Messages = new List<TextMessageDto>
+                                                        {
+                                    new TextMessageDto
+                                    {
+                                        Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
+                                    }
+
+                                        }
+
+                                    };
+                                    ReplyMessage(replyMessage);
+                                }
+
                             }
-                            else if(postdata=="low"|| postdata=="mid"|| postdata == "high")
+                            else if (postdata == "low" || postdata == "mid" || postdata == "high")
                             {
-                                if (File.Exists(filePath))
+                                if (JudgeExsitLog())
                                 {
                                     UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
                                     IList<UserRecord>? result = informationDapper.Load();
                                     UserRecord Xresult = result[0];
                                     OrderFoodPhase4(userID, Xresult.mealtype, Xresult.foodtype, Xresult.lat, Xresult.lon, "40", postdata);
+                                    string result1 = "";
+                                    if (postdata == "low") { result1 = "低價位"; };
+                                    if (postdata == "mid") { result1 = "中價位"; };
+                                    if (postdata == "high") { result1 = "高價位"; };
+                                    ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+                                    replyMessage.ReplyToken = eventObject.ReplyToken;
+                                    replyMessage.Messages = new List<TextMessageDto>();
+                                    TextMessageDto textMessage = new TextMessageDto();
+                                    textMessage.Text = $"您輸入:{result1}";
+                                    replyMessage.Messages.Add(textMessage);
+                                    ReplyMessage(replyMessage);
+                                    OrderFoodPhase5( eventObject.ReplyToken);
                                 }
-                                string result1 = "";
-                                if(postdata == "low") { result1 = "低價位"; };
-                                if(postdata == "mid") { result1 = "中價位"; };
-                                if(postdata == "high") { result1 = "高價位"; };
-                                ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
-                                replyMessage.ReplyToken = eventObject.ReplyToken;
-                                replyMessage.Messages = new List<TextMessageDto>();
-                                TextMessageDto textMessage = new TextMessageDto();
-                                textMessage.Text = $"您輸入:{result1}";
-                                replyMessage.Messages.Add(textMessage);
-                                ReplyMessage(replyMessage);
-                                OrderFoodPhase5();
+                                else
+                                {
+                                    ReplyMessageRequestDto<TextMessageDto> replyMessage;
+                                    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                                    {
+                                        ReplyToken = eventObject.ReplyToken,
+                                        Messages = new List<TextMessageDto>
+                                                        {
+                                    new TextMessageDto
+                                    {
+                                        Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
+                                    }
+
+                                        }
+
+                                    };
+                                    ReplyMessage(replyMessage);
+                                }
+
                             }
 
 
@@ -338,13 +390,13 @@ namespace LineBotMessage.Domain
                         //建檔時間
                         DateTime time = DateTime.Parse(firstLine);
                         //設定2分鐘區間
-                        TimeSpan interval = TimeSpan.FromMinutes(1);
+                        TimeSpan interval = TimeSpan.FromMinutes(2);
                         DateTime now = DateTime.Now;
                         TimeSpan diff = now.Subtract(time);
                         //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
                         if (diff.CompareTo(interval) > 0)
                         {
-                            Console.WriteLine("前一次啟用系統超過1分鐘，將刪除紀錄");
+                            Console.WriteLine("前一次啟用系統超過2分鐘，將刪除紀錄");
                             File.Delete(filePath);
                             UserRecordInformationDapper userRecord = new UserRecordInformationDapper();
                             userRecord.Delete();
@@ -386,7 +438,7 @@ namespace LineBotMessage.Domain
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "晚餐",
-                                                Label = "晚餐 🍽️",
+                                                Label = "晚餐🍽️",
                                                 DisplayText = "晚餐"
                                             },
                                             new ActionDto
@@ -405,13 +457,13 @@ namespace LineBotMessage.Domain
                         }
                         else
                         {
-                            Console.WriteLine("未超過1分鐘");
+                            Console.WriteLine("未超過2分鐘");
                             ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
                             {
                                 ReplyToken = eventObject.ReplyToken,
                                 Messages = new List<TextMessageDto>
                              {
-                                new TextMessageDto(){Text = "距離上一個點餐系統未超過一分鐘，請稍後再啟用系統"}
+                                new TextMessageDto(){Text = "距離上一個點餐系統未超過二分鐘，請稍後再啟用系統"}
                              }
                             };
                             ReplyMessage(replyMessage1);
@@ -459,7 +511,7 @@ namespace LineBotMessage.Domain
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "晚餐",
-                                                Label = "晚餐 ️🍽",
+                                                Label = "晚餐🍽",
                                                 DisplayText = "晚餐 ️"
                                             },
                                             new ActionDto
@@ -491,12 +543,14 @@ namespace LineBotMessage.Domain
                         {
                             string foodtype = eventObject.Message.Text.Trim();
                             string mealtype = result[0].mealtype;
-                            OrderFoodPhase2(userid, mealtype, foodtype, "20");
-                            Console.WriteLine("OrderFoodPhase2完成!");
-                            replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                            if (JudgeExsitLog())
                             {
-                                ReplyToken = eventObject.ReplyToken,
-                                Messages = new List<TextMessageDto>
+                                OrderFoodPhase2(userid, mealtype, foodtype, "20");
+                                Console.WriteLine("OrderFoodPhase2完成!");
+                                replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                                {
+                                    ReplyToken = eventObject.ReplyToken,
+                                    Messages = new List<TextMessageDto>
                                     {
                                          new TextMessageDto
                                          {
@@ -516,9 +570,27 @@ namespace LineBotMessage.Domain
                                             }
                                          }
                                     }
-                            };
-                            ReplyMessage(replyMessage);
+                                };
+
+                            }
+
                         }
+                        else
+                        {
+                            replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                            {
+                                ReplyToken = eventObject.ReplyToken,
+                                Messages = new List<TextMessageDto>
+                                {
+                                    new TextMessageDto
+                                    {
+                                        Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
+                                    }
+                                }
+
+                            };
+                        }
+                        ReplyMessage(replyMessage);
                     }
                     catch (Exception ex)
                     {
@@ -592,7 +664,7 @@ namespace LineBotMessage.Domain
             informationDapper.Update(record);
             Console.WriteLine("OrderFoodPhase3完成");
         }
-        public void OrderFoodPhase4(string userID, string mealtype, string foodtype, string Lat, string Lon, string step,string budget)
+        public void OrderFoodPhase4(string userID, string mealtype, string foodtype, string Lat, string Lon, string step, string budget)
         {
             Console.WriteLine("進到OrderFoodPhase4");
             UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
@@ -603,12 +675,11 @@ namespace LineBotMessage.Domain
             record.lat = Lat;
             record.lon = Lon;
             record.step = step;
-            record.budget= budget;
+            record.budget = budget;
             informationDapper.Update(record);
             Console.WriteLine("OrderFoodPhase4完成");
         }
-
-        public async void OrderFoodPhase5()
+        public async void OrderFoodPhase5(string eventObject_token)
         {
             Console.WriteLine("進到OrderFoodPhase5");
             UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
@@ -617,16 +688,15 @@ namespace LineBotMessage.Domain
             string apiKey = "AIzaSyDPPsEaO_DDA8B4GQneWuztLgqFERD5aB0";
 
             // Set the location and radius for the search
-            int budget=0;
-            string location = result.lat+","+result.lon;
-            string radius = "2000";
-            string type = result.foodtype;
-            string query = result.mealtype;
+            int budget = 0;
+            string location = result.lat + "," + result.lon;
+            string radius = "1500";
+            string keyword = result.mealtype + "+" + result.foodtype;
             if (result.budget == "low") { budget = 1; }
             if (result.budget == "mid") { budget = 2; }
             if (result.budget == "high") { budget = 3; }
             // Create the request URL
-            string url = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={location}&radius={radius}$query={query}&type={type}&key={apiKey}";
+            string url = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={location}&radius={radius}&keyword={keyword}&key={apiKey}";
             Console.WriteLine(url);
             // Send the request and get the response
             using (var client = new HttpClient())
@@ -635,10 +705,68 @@ namespace LineBotMessage.Domain
                 var content = await response.Content.ReadAsStringAsync();
                 var results = JsonConvert.DeserializeObject<PlacesApiResponse>(content);
                 var restaurants = results.Results.Where(r => r.Price_level == budget);
-                Console.WriteLine(JsonConvert.SerializeObject(restaurants));
+                var cont = restaurants.Count();
+                if (cont == 0)
+                {
+                    string filePath = "/app/data/status.txt";
+                    File.Delete(filePath);
+                    Console.WriteLine("因搜尋不到而刪除操作紀錄，請重新重啟");
+                    ReplyMessageRequestDto<TextMessageDto> replyMessage;
+                    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                    {
+                        ReplyToken = eventObject_token,
+                        Messages = new List<TextMessageDto>
+                                     {
+                                        new TextMessageDto
+                                        {
+                                            Text="因搜尋不到而刪除操作紀錄，請重新重啟系統"
+                                        }
+
+                                     }
+
+                    };
+                    ReplyMessage(replyMessage);
+                    return;
+                }
+                if (cont > 0)
+                {
+                    Console.WriteLine($"總共搜尋到:{cont}個");
+                    Console.WriteLine(JsonConvert.SerializeObject(restaurants));
+                }
+
             }
+
             Console.WriteLine("OrderFoodPhase5完成");
 
+        }
+
+        public bool JudgeExsitLog()
+        {
+            string filePath = "/app/data/status.txt";
+            if (File.Exists(filePath))
+            {
+                //讀取第一行
+                string firstLine = File.ReadLines(filePath).First();
+                //建檔時間
+                DateTime time = DateTime.Parse(firstLine);
+                //設定2分鐘區間
+                TimeSpan interval = TimeSpan.FromMinutes(2);
+                DateTime now = DateTime.Now;
+                TimeSpan diff = now.Subtract(time);
+                //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
+                if (diff.CompareTo(interval) > 0)
+                {
+                    Console.WriteLine("前一次啟用系統超過2分鐘，將刪除紀錄");
+                    File.Delete(filePath);
+                    return false;
+                }
+                return true;
+
+            }
+            else
+            {
+                return false;
+            }
         }
         #region 文字天氣
         //static async Task<string> GetWeather()
