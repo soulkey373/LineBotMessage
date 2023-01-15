@@ -1,4 +1,6 @@
-﻿namespace LineBotMessage.Dtos
+﻿using System.Drawing;
+
+namespace LineBotMessage.Dtos
 {
     public class ActionDto
     {
@@ -23,6 +25,10 @@
         public string Initial { get; set; }
         public string Max { get; set; }
         public string Min { get; set; }
+
+        public string style { get; set; }
+
+        public string color { get; set; }
 
         //Camera & Camera roll & Location 屬性已宣告
 

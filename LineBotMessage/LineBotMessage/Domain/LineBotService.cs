@@ -20,6 +20,10 @@ using LineBotMessage.DbConn;
 using Microsoft.Build.Tasks;
 using System.Collections.Generic;
 using System.Net.Http;
+using System;
+using System.IO;
+using System.Net;
+using HtmlAgilityPack;
 
 namespace LineBotMessage.Domain
 {
@@ -145,6 +149,7 @@ namespace LineBotMessage.Domain
                             string filePath = "/app/data/status.txt";
                             if (postdata == "早餐" || postdata == "午餐" || postdata == "晚餐" || postdata == "夜消")
                             {
+                                if (postdata == "夜消") { postdata = "消夜"; }
                                 if (JudgeExsitLog())
                                 {
                                     OrderFoodPhase1(userID, postdata, "10");
@@ -165,12 +170,12 @@ namespace LineBotMessage.Domain
                                         ReplyToken = eventObject.ReplyToken,
                                         Messages = new List<TextMessageDto>
                                                         {
-                                    new TextMessageDto
-                                    {
-                                        Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
-                                    }
+                                                            new TextMessageDto
+                                                            {
+                                                                Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
+                                                            }
 
-                                        }
+                                                        }
 
                                     };
                                     ReplyMessage(replyMessage);
@@ -179,24 +184,19 @@ namespace LineBotMessage.Domain
                             }
                             else if (postdata == "low" || postdata == "mid" || postdata == "high")
                             {
+                                UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+                                UserRecord? result = informationDapper.Load().First();
                                 if (JudgeExsitLog())
                                 {
-                                    UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
-                                    IList<UserRecord>? result = informationDapper.Load();
-                                    UserRecord Xresult = result[0];
-                                    OrderFoodPhase4(userID, Xresult.mealtype, Xresult.foodtype, Xresult.lat, Xresult.lon, "40", postdata);
-                                    string result1 = "";
-                                    if (postdata == "low") { result1 = "低價位"; };
-                                    if (postdata == "mid") { result1 = "中價位"; };
-                                    if (postdata == "high") { result1 = "高價位"; };
-                                    ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
-                                    replyMessage.ReplyToken = eventObject.ReplyToken;
-                                    replyMessage.Messages = new List<TextMessageDto>();
-                                    TextMessageDto textMessage = new TextMessageDto();
-                                    textMessage.Text = $"您輸入:{result1}";
-                                    replyMessage.Messages.Add(textMessage);
-                                    ReplyMessage(replyMessage);
+
+                                    OrderFoodPhase4(userID, result.mealtype, result.foodtype, result.lat, result.lon, "40", postdata);
                                     OrderFoodPhase5( eventObject.ReplyToken);
+                                }
+                                else if (result.step == "99")
+                                {
+                                    //donothing;
+                                    Console.WriteLine("step=99");
+                                    break;
                                 }
                                 else
                                 {
@@ -206,12 +206,12 @@ namespace LineBotMessage.Domain
                                         ReplyToken = eventObject.ReplyToken,
                                         Messages = new List<TextMessageDto>
                                                         {
-                                    new TextMessageDto
-                                    {
-                                        Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
-                                    }
+                                                            new TextMessageDto
+                                                            {
+                                                                Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
+                                                            }
 
-                                        }
+                                                        }
 
                                     };
                                     ReplyMessage(replyMessage);
@@ -258,13 +258,6 @@ namespace LineBotMessage.Domain
             if (eventObject.Message.Text != "" && eventObject.Message.Text != null)
             {
                 string filePath = "/app/data/status.txt";
-                #region 當使用者鍵入"天氣時"
-                //if (eventObject.Message.Text.Trim() == "天氣")
-                //{
-                //    string result = await GetWeather();
-                //    textMessage.Text = result;
-                //}
-                #endregion
 
                 #region 當使用者鍵入"天氣"Carousel 型態
                 //if (eventObject.Message.Text.Contains("天氣 "))
@@ -332,51 +325,6 @@ namespace LineBotMessage.Domain
                 //}
                 #endregion
 
-                #region 當使用者鍵入"測試快速回復"
-
-                //if (eventObject.Message.Text.Contains("測試快速回復"))
-                //{
-                //    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
-                //    {
-                //        ReplyToken = eventObject.ReplyToken,
-                //        Messages = new List<TextMessageDto>
-                //        {
-                //             new TextMessageDto
-                //             {
-                //                Text ="QuickReply 測試訊息",
-                //                QuickReply = new QuickReplyItemDto
-                //                {
-                //                     Items = new List<QuickReplyButtonDto>
-                //                     {
-                //                         // message action
-                //                            new QuickReplyButtonDto {
-                //                                Action = new ActionDto {
-                //                                    Type = ActionTypeEnum.Message,
-                //                                    Label = "message 測試" ,
-                //                                    Text = "測試"
-                //                                }
-                //                            },
-                //                              // location action
-                //                            new QuickReplyButtonDto {
-                //                                Action = new ActionDto {
-                //                                    Type = ActionTypeEnum.Location,
-                //                                    Label = "開啟位置"
-                //                                }
-                //                            }
-                //                     }
-                //                }
-                //             }
-                //        }
-                //    };
-                //}
-                //else
-                //{
-                //    textMessage.Text = eventObject.Message.Text;
-                //}
-                //replyMessage.Messages.Add(textMessage);
-                //replyMessage1.Messages.Add(templateMessage);
-                #endregion
-
                 #region 點餐系統
 
                 if (eventObject.Message.Text.Trim() == "吃什麼")
@@ -424,28 +372,28 @@ namespace LineBotMessage.Domain
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "早餐",
-                                                Label = "早餐🍳",
+                                                Label = "早餐",
                                                 DisplayText = "早餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "午餐",
-                                                Label = "午餐🍱",
+                                                Label = "午餐",
                                                 DisplayText = "午餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "晚餐",
-                                                Label = "晚餐🍽️",
+                                                Label = "晚餐",
                                                 DisplayText = "晚餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "夜消",
-                                                Label = "夜消🍪",
+                                                Label = "夜消",
                                                 DisplayText = "夜消"
                                             }
                                         }
@@ -498,27 +446,27 @@ namespace LineBotMessage.Domain
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "早餐",
                                                 Label = "早餐",
-                                                DisplayText = "早餐🍳"
+                                                DisplayText = "早餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "午餐",
-                                                Label = "午餐🍱",
+                                                Label = "午餐",
                                                 DisplayText = "午餐"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "晚餐",
-                                                Label = "晚餐🍽",
+                                                Label = "晚餐",
                                                 DisplayText = "晚餐 ️"
                                             },
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "消夜",
-                                                Label = "夜消🍪",
+                                                Label = "夜消",
                                                 DisplayText = "夜消"
                                             }
                                         }
@@ -620,7 +568,7 @@ namespace LineBotMessage.Domain
                 };
 
                 HttpResponseMessage response = await client.SendAsync(requestMessage);
-                //Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
+                Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
             }
             catch (Exception ex)
             {
@@ -684,60 +632,145 @@ namespace LineBotMessage.Domain
             Console.WriteLine("進到OrderFoodPhase5");
             UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
             UserRecord? result = informationDapper.Load().First();
-            // Replace YOUR_API_KEY with your actual API key
-            string apiKey = "AIzaSyDPPsEaO_DDA8B4GQneWuztLgqFERD5aB0";
-
-            // Set the location and radius for the search
-            int budget = 0;
-            string location = result.lat + "," + result.lon;
-            string radius = "1500";
-            string keyword = result.mealtype + "+" + result.foodtype;
-            if (result.budget == "low") { budget = 1; }
-            if (result.budget == "mid") { budget = 2; }
-            if (result.budget == "high") { budget = 3; }
-            // Create the request URL
-            string url = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={location}&radius={radius}&keyword={keyword}&key={apiKey}";
-            Console.WriteLine(url);
-            // Send the request and get the response
-            using (var client = new HttpClient())
+            if (result.step == "40")
             {
-                var response = await client.GetAsync(url);
-                var content = await response.Content.ReadAsStringAsync();
-                var results = JsonConvert.DeserializeObject<PlacesApiResponse>(content);
-                var restaurants = results.Results.Where(r => r.Price_level == budget);
-                var cont = restaurants.Count();
-                if (cont == 0)
+                // Replace YOUR_API_KEY with your actual API key
+                string apiKey = "AIzaSyDPPsEaO_DDA8B4GQneWuztLgqFERD5aB0";
+
+                // Set the location and radius for the search
+                int budget = 0;
+                string location = result.lat + "," + result.lon;
+                string radius = "3000";
+                string keyword = result.mealtype + "+" + result.foodtype;
+                if (result.budget == "low") { budget = 1; }
+                if (result.budget == "mid") { budget = 2; }
+                if (result.budget == "high") { budget = 3; }
+                // Create the request URL
+                string url = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={location}&radius={radius}&keyword={keyword}&key={apiKey}";
+                Console.WriteLine(url);
+                // Send the request and get the response
+                using (var client = new HttpClient())
                 {
-                    string filePath = "/app/data/status.txt";
-                    File.Delete(filePath);
-                    Console.WriteLine("因搜尋不到而刪除操作紀錄，請重新重啟");
-                    ReplyMessageRequestDto<TextMessageDto> replyMessage;
-                    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+                    var response = await client.GetAsync(url);
+                    var content = await response.Content.ReadAsStringAsync();
+                    var results = JsonConvert.DeserializeObject<PlacesApiResponse>(content);
+                    var restaurants = results.Results.Where(r => r.Price_level == budget);
+                    var count = restaurants.Count();
+                    if (count == 0)
                     {
-                        ReplyToken = eventObject_token,
-                        Messages = new List<TextMessageDto>
-                                     {
-                                        new TextMessageDto
+                        string filePath = "/app/data/status.txt";
+                        File.Delete(filePath);
+                        Console.WriteLine("搜尋筆數為零，請重新操作");
+                        result.step = "99";
+                        informationDapper.Update(result);
+                        ReplyMessageRequestDto<TextMessageDto> replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>();
+                        replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>
+                        {
+                            ReplyToken = eventObject_token,
+                            Messages = new List<TextMessageDto>
                                         {
-                                            Text="因搜尋不到而刪除操作紀錄，請重新重啟系統"
-                                        }
+                                            new TextMessageDto
+                                            {
+                                                Text="搜尋筆數為零，請重新操作"
+                                            }
+                                         }
+                        };
+                        ReplyMessage(replyMessage1);
+                    }
+                    if (count > 0)
+                    {
+                        result.step = "50";
+                        informationDapper.Update(result);
+                        Console.WriteLine($"總共搜尋到:{count}個");
+                        Console.WriteLine(JsonConvert.SerializeObject(restaurants));
 
-                                     }
+                        ReplyMessageRequestDto<TemplateMessageDto<ImageCarouselTemplateDto>> replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<ImageCarouselTemplateDto>>();
+                        replyMessage1.ReplyToken = eventObject_token;
+                        replyMessage1.Messages = new List<TemplateMessageDto<ImageCarouselTemplateDto>>();
+                        Console.WriteLine("在Count裡面");
+                        List<Place>? reuslt = restaurants.ToList();
+                        List<TemplateMessageDto<ImageCarouselTemplateDto>>? foodresponse = OrderFoodPhase6(count, reuslt);
+                        replyMessage1.Messages = foodresponse;
+                        ReplyMessage(replyMessage1);
+                    }
 
-                    };
-                    ReplyMessage(replyMessage);
-                    return;
                 }
-                if (cont > 0)
-                {
-                    Console.WriteLine($"總共搜尋到:{cont}個");
-                    Console.WriteLine(JsonConvert.SerializeObject(restaurants));
-                }
 
+                Console.WriteLine("OrderFoodPhase5完成");
             }
+            else
+            {
+                return;
+            }
+           
 
-            Console.WriteLine("OrderFoodPhase5完成");
+        }
 
+        public List<TemplateMessageDto<ImageCarouselTemplateDto>> OrderFoodPhase6(int count, List<Place> reuslt)
+        {
+            Console.WriteLine("進到OrderFoodPhase6");
+            List<TemplateMessageDto<ImageCarouselTemplateDto>> carouselList = new List<TemplateMessageDto<ImageCarouselTemplateDto>>();
+            if (count > 10) { count = 10; }
+            for (int num = 0; num<count;num++)
+            {
+                Console.WriteLine($"第{num+1}進到OrderFoodPhase6的for迴圈裡");
+
+                string keyword = reuslt[num].Name.Trim();
+                string url = $"https://www.google.com/search?q={keyword}&tbm=isch";
+                Console.WriteLine(url);
+                string resulturl ="";
+                try
+                {
+                    using (WebClient client = new WebClient())
+                    {
+                        Console.WriteLine("在WebClient裡面");
+                        string html = client.DownloadString(url);
+                        HtmlDocument doc = new HtmlDocument();
+                        doc.LoadHtml(html);
+                        HtmlNodeCollection imgNodes = doc.DocumentNode.SelectNodes("//img[@alt='" + keyword + "']");
+                        if (imgNodes != null)
+                        {
+                            HtmlNode imgNode = imgNodes[0];
+                            resulturl = imgNode.GetAttributeValue("src", "");
+                            Console.WriteLine("Image url: " + resulturl);
+                        }
+                    }
+                    Console.WriteLine("爬圖片成功");
+
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine("爬圖片失敗");
+                    Console.WriteLine(ex.ToString());
+                }
+
+
+
+
+                TemplateMessageDto<ImageCarouselTemplateDto> templateMessage = new TemplateMessageDto<ImageCarouselTemplateDto>
+                {
+                    AltText = reuslt[num].Name.Trim(),
+                    Template = new ImageCarouselTemplateDto
+                    {
+                        Columns = new List<ImageCarouselColumnObjectDto>
+                        {
+                            new ImageCarouselColumnObjectDto
+                            {
+                                ImageUrl=resulturl,
+                                Action=new ActionDto
+                                {
+                                    Type = ActionTypeEnum.Uri,
+                                    Label = "立即導航",
+                                    Uri=$"https://maps.google.com/maps?q={keyword}"
+                                }
+                            }
+                        }
+                    }
+                };
+                carouselList.Add(templateMessage);
+            }
+            Console.WriteLine("準備離開OrderFoodPhase6");
+            return carouselList;
         }
 
         public bool JudgeExsitLog()
@@ -768,6 +801,7 @@ namespace LineBotMessage.Domain
                 return false;
             }
         }
+
         #region 文字天氣
         //static async Task<string> GetWeather()
         //{
@@ -867,94 +901,6 @@ namespace LineBotMessage.Domain
             }
 
         }
-        #endregion
-
-        #region Dapper範例參考_orderfood
-        //public void OrderFood(string text)
-        //{
-        //    string connString = "Host=soulkeydb.internal;Port=5432;Username=postgres;Password=xwOCnnjArOaAnBZ;Database=runoobdb";
-        //    //UserRecordInformation userRecord = new UserRecordInformation();
-        //    UserRecordInformationDapper userRecord1 = new UserRecordInformationDapper();
-        //    int day = (int)Convert.ToUInt32(text);
-        //    switch (day)
-        //    {
-        //        case 1:
-        //            DateTime time = DateTime.Now;
-        //            UserRecord userRecord = new UserRecord();
-        //            userRecord.id = 930030;
-        //            userRecord.mealtype = "早餐";
-        //            userRecord.foodtype = "滿福堡";
-        //            userRecord.lon = "122";
-        //            userRecord.lat = "76";
-        //            userRecord.time = time;
-        //            userRecord.step = "Q1";
-        //            var reusult = userRecord1.Create(connString, userRecord);
-        //            Console.WriteLine("---------Dapper測試:Create模式---------");
-        //            Console.WriteLine("Create:{0}", reusult ? "成功" : "失敗");
-        //            break;
-        //        case 2:
-        //            int bocci = 930030;
-        //            var reusult2 = userRecord1.Load(connString, bocci);
-        //            Console.WriteLine("---------Dapper測試:Load模式---------");
-        //            Console.WriteLine($"Load \n{reusult2[0].id}\n{reusult2[0].mealtype}\n{reusult2[0].foodtype}\n{reusult2[0].lat}\n{reusult2[0].lon}\n{reusult2[0].step}\n{reusult2[0].time}");
-
-        //            break;
-        //        case 3:
-        //            DateTime time2 = DateTime.Now;
-        //            UserRecord userRecord4 = new UserRecord();
-        //            userRecord4.id = 930030;
-        //            userRecord4.mealtype = "午餐";
-        //            userRecord4.foodtype = "雞腿便當";
-        //            userRecord4.lon = "122";
-        //            userRecord4.lat = "76";
-        //            userRecord4.time = time2;
-        //            userRecord4.step = "Q1";
-        //            var reusult3 = userRecord1.Update(connString, userRecord4);
-        //            var arg2 = reusult3 ? "成功" : "失敗";
-        //            Console.WriteLine("---------Dapper測試:Load模式---------");
-        //            Console.WriteLine($"更新:{arg2}");
-        //            break;
-        //        case 4:
-        //            int bocc2 = 930030;
-        //            var reusult5 = userRecord1.Delete(connString, bocc2);
-        //            var arg = reusult5 ? "成功" : "失敗";
-        //            Console.WriteLine("---------Dapper測試:Load模式---------");
-        //            Console.WriteLine($"刪除:{arg}");
-        //            break;
-        //        case 5:
-        //            string time1 = DateTime.Now.ToString();
-        //            string filePath = "/app/data/status.txt";
-        //            if (File.Exists(filePath))
-        //            {
-        //                //讀取第一行
-        //                string firstLine = File.ReadLines(filePath).First();
-        //                //建檔時間
-        //                DateTime time3 = DateTime.Parse(firstLine);
-        //                //設定2分鐘區間
-        //                TimeSpan interval = TimeSpan.FromMinutes(2);
-        //                DateTime now = DateTime.Now;
-        //                TimeSpan diff = now.Subtract(time3);
-        //                //如果當前時間跟文本時間相比，是超過設定的2分鐘，則回傳大於一的整數。
-        //                if (diff.CompareTo(interval) > 0)
-        //                {
-        //                    Console.WriteLine("超過2分鐘，將會刪除");
-        //                    File.Delete(filePath);
-        //                }
-        //                else
-        //                {
-        //                    Console.WriteLine("未超過2分鐘");
-        //                }
-        //            }
-        //            else
-        //            {
-        //                File.WriteAllText(filePath, time1);
-        //                string firstLine = File.ReadLines(filePath).First();
-        //                Console.WriteLine($"以建立紀錄\n{firstLine}");
-        //            }
-
-        //            break;
-        //    }
-        //}
         #endregion
 
     }
