@@ -195,7 +195,7 @@ namespace LineBotMessage.Domain
                                 {
 
                                     OrderFoodPhase4(userID, result.mealtype, result.foodtype, result.lat, result.lon, "40", postdata);
-                                    OrderFoodPhase5( eventObject.ReplyToken);
+                                    OrderFoodPhase5(eventObject.ReplyToken);
                                 }
                                 else if (result.step == "99")
                                 {
@@ -565,6 +565,7 @@ namespace LineBotMessage.Domain
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", channelAccessToken); //帶入 channel access token
                 string? json = _jsonProvider.Serialize(request);
+                Console.WriteLine(json);
                 HttpRequestMessage? requestMessage = new HttpRequestMessage
                 {
                     Method = HttpMethod.Post,
@@ -687,53 +688,27 @@ namespace LineBotMessage.Domain
                         result.step = "50";
                         informationDapper.Update(result);
                         Console.WriteLine($"總共搜尋到:{count}個");
-                        Console.WriteLine(JsonConvert.SerializeObject(restaurants));
-                        string? result123 = JsonConvert.SerializeObject(restaurants);
-                        //    ReplyMessageRequestDto<TemplateMessageDto<ImageCarouselTemplateDto>> replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<ImageCarouselTemplateDto>>();
-                        //    replyMessage1.ReplyToken = eventObject_token;
-                        //    replyMessage1.Messages = new List<TemplateMessageDto<ImageCarouselTemplateDto>>();
-                        //    Console.WriteLine("在Count裡面");
-                        //    List<Place>? reuslt = restaurants.ToList();
-                        //    List<TemplateMessageDto<ImageCarouselTemplateDto>>? foodresponse =await OrderFoodPhase6(count, reuslt);
-                        //    Task.Delay(300).Wait();
-                        //    replyMessage1.Messages = foodresponse;
-                        //    ReplyMessage(replyMessage1);
-                        //}
-                        //var template = new TemplateMessageDto<CarouselTemplateDto>();
-                        //template.AltText = "這是輪播訊息";
-                        //template.Template = new CarouselTemplateDto();
-                        //template.Template.Columns = new List<CarouselColumnObjectDto>();
-                        //var column = new CarouselColumnObjectDto();
-                        //column.ThumbnailImageUrl = "https://www.apple.com/v/iphone-14-pro/a/images/meta/iphone-14-pro_overview__e2a7u9jy63ma_og.png";
-                        //column.Title = "全新上市 iPhone 14 Pro";
-                        //column.Text = "現在購買享優惠，全品項 9 折";
-                        //column.Actions = new List<ActionDto>();
-                        //var action = new ActionDto();
-                        //action.Type = ActionTypeEnum.Uri;
-                        //action.Label = "立即購買";
-                        //action.Uri = "https://www.apple.com/tw/iphone-14-pro/?afid=p238%7Cs2W650oa9-dc_mtid_2092576n66464_pcrid_620529299490_pgrid_144614079327_&cid=wwa-tw-kwgo-iphone-slid---productid--Brand-iPhone14Pro-Announce-";
-                        //column.Actions.Add(action);
-                        //template.Template.Columns.Add(column);
-                         List<CarouselColumnObjectDto> list= await bingCarousel(restaurants);
-                        Task.WaitAll();
-                        List<CarouselColumnObjectDto>? reuslt = new List<CarouselColumnObjectDto>();
-                        reuslt.Add(list);
-
-                        
-                        if (reuslt.Count > 10)
+                        dynamic replyMessage = new ReplyMessageRequestDto<BaseMessageDto>();
+                        List<TemplateMessageDto<CarouselTemplateDto>>? result1 = await bingCarousel(restaurants);
+                        if (result1[0].Template.Columns.Count>10) 
                         {
-                            reuslt = reuslt.Take(10).ToList();
+                            result1[0].Template.Columns = result1[0].Template.Columns.Take(10).ToList();
+                            Console.WriteLine($"目List篩選過的的數量為:{result1[0].Template.Columns.Count}個");
                         }
-                        Console.WriteLine("目前result的數量{0}",reuslt.Count);
-                        ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>> replyMessage1 = new ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>>();
-                        replyMessage1.ReplyToken = eventObject_token;
-                        replyMessage1.Messages = new List<TemplateMessageDto<CarouselTemplateDto>>();
-                        var templateMessage = new TemplateMessageDto<CarouselTemplateDto>();
-                        templateMessage.AltText = "測試美食Carousel";
-                        templateMessage.Template = new CarouselTemplateDto();
-                        templateMessage.Template.Columns = reuslt;
-                        replyMessage1.Messages.Add(templateMessage);
-                        ReplyMessage(replyMessage1);
+                        else
+                        {
+                            Console.WriteLine($"目List篩選過的的數量為:{result1[0].Template.Columns.Count}個");
+                        }
+                        Task.WaitAll();
+
+                        replyMessage = new ReplyMessageRequestDto<TemplateMessageDto<CarouselTemplateDto>>()
+                        {
+                            ReplyToken = eventObject_token,
+                            Messages = result1
+                        };
+
+  
+                        ReplyMessage(replyMessage);
                     }
 
                     Console.WriteLine("OrderFoodPhase5完成");
@@ -743,47 +718,47 @@ namespace LineBotMessage.Domain
             {
                 return;
             }
-           
+
 
         }
 
-        public async Task<List<TemplateMessageDto<ImageCarouselTemplateDto>>> OrderFoodPhase6(int count, List<Place> reuslt)
-        {
-            Console.WriteLine("進到OrderFoodPhase6");
-            List<TemplateMessageDto<ImageCarouselTemplateDto>> carouselList = new List<TemplateMessageDto<ImageCarouselTemplateDto>>();
-            if (count > 10) { count = 10; }
-            for (int num = 0; num<count;num++)
-            {
-                Console.WriteLine($"第{num+1}進到OrderFoodPhase6的for迴圈裡");
-                Task<string>? result1 = Getbingimage(reuslt[num].Name);
-                Console.WriteLine($"圖片網址:{result1.Result}");
+        //public async Task<List<TemplateMessageDto<ImageCarouselTemplateDto>>> OrderFoodPhase6(int count, List<Place> reuslt)
+        //{
+        //    Console.WriteLine("進到OrderFoodPhase6");
+        //    List<TemplateMessageDto<ImageCarouselTemplateDto>> carouselList = new List<TemplateMessageDto<ImageCarouselTemplateDto>>();
+        //    if (count > 10) { count = 10; }
+        //    for (int num = 0; num < count; num++)
+        //    {
+        //        Console.WriteLine($"第{num + 1}進到OrderFoodPhase6的for迴圈裡");
+        //        Task<string>? result1 = Getbingimage(reuslt[num].Name);
+        //        Console.WriteLine($"圖片網址:{result1.Result}");
 
 
-                TemplateMessageDto <ImageCarouselTemplateDto> templateMessage = new TemplateMessageDto<ImageCarouselTemplateDto>
-                {
-                    AltText = reuslt[num].Name.Trim(),
-                    Template = new ImageCarouselTemplateDto
-                    {
-                        Columns = new List<ImageCarouselColumnObjectDto>
-                        {
-                            new ImageCarouselColumnObjectDto
-                            {
-                                ImageUrl=result1.Result,
-                                Action=new ActionDto
-                                {
-                                    Type = ActionTypeEnum.Uri,
-                                    Label = "立即導航",
-                                    Uri=$"https://maps.google.com/maps?q={reuslt[0].Name}"
-                                }
-                            }
-                        }
-                    }
-                };
-                carouselList.Add(templateMessage);
-            }
-            Console.WriteLine("準備離開OrderFoodPhase6");
-            return carouselList;
-        }
+        //        TemplateMessageDto<ImageCarouselTemplateDto> templateMessage = new TemplateMessageDto<ImageCarouselTemplateDto>
+        //        {
+        //            AltText = reuslt[num].Name.Trim(),
+        //            Template = new ImageCarouselTemplateDto
+        //            {
+        //                Columns = new List<ImageCarouselColumnObjectDto>
+        //                {
+        //                    new ImageCarouselColumnObjectDto
+        //                    {
+        //                        ImageUrl=result1.Result,
+        //                        Action=new ActionDto
+        //                        {
+        //                            Type = ActionTypeEnum.Uri,
+        //                            Label = "立即導航",
+        //                            Uri=$"https://maps.google.com/maps?q={reuslt[0].Name}"
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        };
+        //        carouselList.Add(templateMessage);
+        //    }
+        //    Console.WriteLine("準備離開OrderFoodPhase6");
+        //    return carouselList;
+        //}
 
         public bool JudgeExsitLog()
         {
@@ -914,64 +889,124 @@ namespace LineBotMessage.Domain
 
         }
         #endregion
-
-        static async Task<List<CarouselColumnObjectDto>> bingCarousel(IEnumerable<Place> name)
+        public static async Task<List<TemplateMessageDto<CarouselTemplateDto>>> bingCarousel(IEnumerable<Place> name)
         {
             try
             {
-                Console.WriteLine("bingCarousel : 開始");
+                Console.WriteLine("=====\nBing_Search_Api : 開始");
+                List<TemplateMessageDto<CarouselTemplateDto>> dtos = new List<TemplateMessageDto<CarouselTemplateDto>>();
+                TemplateMessageDto<CarouselTemplateDto> messageDto= new TemplateMessageDto<CarouselTemplateDto>();
                 List<CarouselColumnObjectDto> carouselList = new List<CarouselColumnObjectDto>();
-                foreach (var xName in name)
-                {
-                    Console.WriteLine($"搜尋到的名子:{xName.Name}");
-                    string Url = "";
 
+                foreach (Place xName in name)
+                {
                     const string apiKey = "8049b67d654d48f19130d93f9b7c1017";
                     HttpClient? client = new HttpClient { BaseAddress = new Uri("https://api.bing.microsoft.com/v7.0/images/search") };
                     client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", apiKey);
 
-
                     HttpResponseMessage? response = await client.GetAsync($"?q={xName.Name}&count=1");
                     string? json = await response.Content.ReadAsStringAsync();
-                    dynamic data = JsonConvert.DeserializeObject(json);
-
-
+                    ImageResult? data = JsonConvert.DeserializeObject<ImageResult>(json);
+                    Console.WriteLine($"bingsearch回傳的:\n{data}");
                     if (response.IsSuccessStatusCode == true)
                     {
                         response.EnsureSuccessStatusCode();
-                        string responseBody = await response.Content.ReadAsStringAsync();
-                        foreach (var image in data.value)
-                        {
                             
-                            var carouselColumnObject = new CarouselColumnObjectDto();
+                            string? name123 = HttpUtility.UrlEncode(xName.Name);
+                            //Console.WriteLine($"店名:{xName.Name}\n照片:{image.thumbnailUrl}");
+                            CarouselColumnObjectDto? carouselColumnObject = new CarouselColumnObjectDto();
                             carouselColumnObject.Text = xName.Name;
-                            carouselColumnObject.ThumbnailImageUrl = image.thumbnailUrl;
-                            Console.WriteLine($"店名:{xName.Name}\n照片:{image.thumbnailUrl}");
+                            carouselColumnObject.Title = xName.Name;
+                            carouselColumnObject.ThumbnailImageUrl = data.thumbnailUrl;
                             carouselColumnObject.Actions = new List<ActionDto>();
-                            var action = new ActionDto();
+                            ActionDto? action = new ActionDto();
                             action.Type = ActionTypeEnum.Uri;
-                            action.Label = "立即購買";
-                            action.Uri = "";
+                            action.Label = "立即導航";
+                            action.Uri = $"https://www.google.com/maps?q={name123}";
                             carouselColumnObject.Actions.Add(action);
                             carouselList.Add(carouselColumnObject);
-                        }
-                        Console.WriteLine("bingCarousel : 結束");
+                            Console.WriteLine("Bing_Search_Api:成功");
                     }
+
+                    
                     else
                     {
-                        return null;
+                        Console.WriteLine("Bing_Search_Api:失敗");
                     }
+
                 }
 
-                return carouselList;
+                messageDto.AltText = "這是美食推播";
+                messageDto.Template = new CarouselTemplateDto { Columns= carouselList };
+                dtos.Add(messageDto);
+                Console.WriteLine("Bing_Search_Api : 結束\n=====");
+
+
+                return dtos;
             }
-            catch (HttpRequestException e)
+            catch (Exception e)
             {
-                Console.WriteLine("func:bingCarousel失敗 :\n{0} ", e.Message.ToString());
+                Console.WriteLine("Bing_Search_Api失敗 :\n{0} ", e.Message.ToString());
                 return null;
             }
 
         }
+        //public static async Task<List<CarouselColumnObjectDto>> bingCarousel(IEnumerable<Place> name)
+        //{
+        //    try
+        //    {
+        //        Console.WriteLine("bingCarousel : 開始");
+        //        List<CarouselColumnObjectDto> carouselList = new List<CarouselColumnObjectDto>();
+        //        foreach (var xName in name)
+        //        {
+        //            Console.WriteLine($"搜尋到的名子:{xName.Name}");
+        //            string Url = "";
+
+        //            const string apiKey = "8049b67d654d48f19130d93f9b7c1017";
+        //            HttpClient? client = new HttpClient { BaseAddress = new Uri("https://api.bing.microsoft.com/v7.0/images/search") };
+        //            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", apiKey);
+
+
+        //            HttpResponseMessage? response = await client.GetAsync($"?q={xName.Name}&count=1");
+        //            string? json = await response.Content.ReadAsStringAsync();
+        //            dynamic data = JsonConvert.DeserializeObject(json);
+
+
+        //            if (response.IsSuccessStatusCode == true)
+        //            {
+        //                response.EnsureSuccessStatusCode();
+        //                foreach (var image in data.value)
+        //                {
+
+        //                    var carouselColumnObject = new CarouselColumnObjectDto();
+        //                    carouselColumnObject.Text = xName.Name;
+        //                    carouselColumnObject.ThumbnailImageUrl = image.thumbnailUrl;
+        //                    Console.WriteLine($"店名:{xName.Name}\n照片:{image.thumbnailUrl}");
+        //                    carouselColumnObject.Actions = new List<ActionDto>();
+        //                    var action = new ActionDto();
+        //                    action.Type = ActionTypeEnum.Uri;
+        //                    action.Label = "立即購買";
+        //                    action.Uri = "";
+        //                    carouselColumnObject.Actions.Add(action);
+        //                    carouselList.Add(carouselColumnObject);
+        //                }
+        //                Console.WriteLine("bingCarousel : 結束");
+        //            }
+        //            else
+        //            {
+        //                return null;
+        //            }
+        //        }
+
+        //        return carouselList;
+        //    }
+        //    catch (HttpRequestException e)
+        //    {
+        //        Console.WriteLine("func:bingCarousel失敗 :\n{0} ", e.Message.ToString());
+        //        return null;
+        //    }
+
+        //}
 
         #region 查圖片
         public async Task<string> Getbingimage(string name)
