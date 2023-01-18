@@ -152,40 +152,22 @@ namespace LineBotMessage.Domain
                             string? userID = eventObject.Source.UserId;
                             string postdata = eventObject.Postback.Data.Trim();
                             string filePath = "/app/data/status.txt";
-                            if (postdata == "早餐" || postdata == "午餐" || postdata == "晚餐" || postdata == "夜消")
+                            if (postdata == "早餐" || postdata == "午餐" || postdata == "晚餐" || postdata == "消夜")
                             {
-                                if (postdata == "夜消") { postdata = "消夜"; }
-                                if (JudgeExsitLog())
-                                {
-                                    OrderFoodPhase1(userID, postdata, "10");
-                                    Console.WriteLine("OrderFoodPhase1完成!");
-                                    ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
-                                    replyMessage.ReplyToken = eventObject.ReplyToken;
-                                    replyMessage.Messages = new List<TextMessageDto>();
-                                    TextMessageDto textMessage = new TextMessageDto();
-                                    textMessage.Text = "請輸入您想要的食物: 🤔\ne.g. 牛排🥩, 拉麵 🍜";
-                                    replyMessage.Messages.Add(textMessage);
-                                    ReplyMessage(replyMessage);
-                                }
-                                else
-                                {
-                                    ReplyMessageRequestDto<TextMessageDto> replyMessage;
-                                    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
+
+                                    Console.WriteLine($"進到postback裡輸入值為:{postdata}");
+                                    if (JudgeExsitLog())
                                     {
-                                        ReplyToken = eventObject.ReplyToken,
-                                        Messages = new List<TextMessageDto>
-                                                        {
-                                                            new TextMessageDto
-                                                            {
-                                                                Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
-                                                            }
-
-                                                        }
-
-                                    };
-                                    ReplyMessage(replyMessage);
-                                }
-
+                                        OrderFoodPhase1(userID, postdata, "10");
+                                        Console.WriteLine("OrderFoodPhase1完成!");
+                                        ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
+                                        replyMessage.ReplyToken = eventObject.ReplyToken;
+                                        replyMessage.Messages = new List<TextMessageDto>();
+                                        TextMessageDto textMessage = new TextMessageDto();
+                                        textMessage.Text = "請輸入您想要的食物: 🤔\ne.g. 牛排🥩, 拉麵 🍜";
+                                        replyMessage.Messages.Add(textMessage);
+                                        ReplyMessage(replyMessage);
+                                    }
                             }
                             else if (postdata == "low" || postdata == "mid" || postdata == "high")
                             {
@@ -202,24 +184,6 @@ namespace LineBotMessage.Domain
                                     //donothing;
                                     Console.WriteLine("step=99");
                                     break;
-                                }
-                                else
-                                {
-                                    ReplyMessageRequestDto<TextMessageDto> replyMessage;
-                                    replyMessage = new ReplyMessageRequestDto<TextMessageDto>
-                                    {
-                                        ReplyToken = eventObject.ReplyToken,
-                                        Messages = new List<TextMessageDto>
-                                                        {
-                                                            new TextMessageDto
-                                                            {
-                                                                Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
-                                                            }
-
-                                                        }
-
-                                    };
-                                    ReplyMessage(replyMessage);
                                 }
 
                             }
@@ -331,8 +295,20 @@ namespace LineBotMessage.Domain
                 #endregion
 
                 #region 點餐系統
-
-                if (eventObject.Message.Text.Trim() == "吃什麼")
+                if (eventObject.Message.Text.Trim().Contains("!停止")|| (eventObject.Message.Text.Trim().Contains("！停止")))
+                    {
+                        stop();
+                    ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                    {
+                        ReplyToken = eventObject.ReplyToken,
+                        Messages = new List<TextMessageDto>
+                             {
+                                new TextMessageDto(){Text = "系統已停止"}
+                             }
+                    };
+                    ReplyMessage(replyMessage1);
+                }
+                if (eventObject.Message.Text.Trim().Contains("!吃什麼")|| eventObject.Message.Text.Trim().Contains("！吃什麼"))
                 {
                     Console.WriteLine("進來吃什麼系統");
 
@@ -397,9 +373,9 @@ namespace LineBotMessage.Domain
                                             new ActionDto
                                             {
                                                 Type = ActionTypeEnum.Postback,
-                                                Data = "夜消",
-                                                Label = "夜消",
-                                                DisplayText = "夜消"
+                                                Data = "消夜",
+                                                Label = "消夜",
+                                                DisplayText = "消夜"
                                             }
                                         }
                                         }
@@ -471,8 +447,8 @@ namespace LineBotMessage.Domain
                                             {
                                                 Type = ActionTypeEnum.Postback,
                                                 Data = "消夜",
-                                                Label = "夜消",
-                                                DisplayText = "夜消"
+                                                Label = "消夜",
+                                                DisplayText = "消夜"
                                             }
                                         }
                                         }
@@ -586,6 +562,7 @@ namespace LineBotMessage.Domain
         {
             Console.WriteLine("進到OrderFoodPhase1");
             UserRecordInformationDapper informationDapper = new UserRecordInformationDapper();
+            informationDapper.Delete();
             UserRecord record = new UserRecord();
             record.id = userID;
             record.mealtype = mealtype;
@@ -723,7 +700,13 @@ namespace LineBotMessage.Domain
 
 
         }
-
+        public void stop()
+        {
+            string filePath = "/app/data/status.txt";
+            File.Delete(filePath);
+            UserRecordInformationDapper userRecord = new UserRecordInformationDapper();
+            userRecord.Delete();
+        }
  
         public bool JudgeExsitLog()
         {
