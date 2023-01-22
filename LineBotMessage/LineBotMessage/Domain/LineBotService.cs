@@ -29,6 +29,9 @@ using System.Xml.Linq;
 using System.Security.Policy;
 using System.Reflection.Emit;
 using static System.Collections.Specialized.BitVector32;
+using LineBotMessage.Dtos.Webhook;
+using System.Text.RegularExpressions;
+using System.Formats.Asn1;
 
 namespace LineBotMessage.Domain
 {
@@ -123,19 +126,19 @@ namespace LineBotMessage.Domain
                                 }
                                 else
                                 {
-                                    ReplyMessageRequestDto<TextMessageDto> replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>();
-                                    replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>
-                                    {
-                                        ReplyToken = eventObject.ReplyToken,
-                                        Messages = new List<TextMessageDto>
-                                        {
-                                            new TextMessageDto
-                                            {
-                                                Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
-                                            }
-                                         }
-                                    };
-                                    ReplyMessage(replyMessage1);
+                                    //ReplyMessageRequestDto<TextMessageDto> replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>();
+                                    //replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>
+                                    //{
+                                    //    ReplyToken = eventObject.ReplyToken,
+                                    //    Messages = new List<TextMessageDto>
+                                    //    {
+                                    //        new TextMessageDto
+                                    //        {
+                                    //            Text="距離上次呼叫已超過二分鐘，\n請重新鍵入-吃什麼-\n以便請用系統"
+                                    //        }
+                                    //     }
+                                    //};
+                                    //ReplyMessage(replyMessage1);
                                 }
 
                             }
@@ -554,6 +557,213 @@ namespace LineBotMessage.Domain
                 }
                 #endregion
 
+                #region ChatGPT
+                string? xuserid = eventObject.Source.UserId;
+                Aimodel aimodelx = new Aimodel();
+                aimodelx.userid = xuserid;
+                AiRecordInformationDapper aiRecordInformation = new AiRecordInformationDapper();
+                List<Aimodel>? loadresponse = aiRecordInformation.Load(aimodelx);
+                var userResponse = eventObject.Message.Text.Trim();
+                if (userResponse.Contains("@miko h"))
+                {
+                    string result = "1.@miko+空格+敘述問題\r\n例:@miko 今天要幹嘛\r\n\n2.@miko+空格+繼續\n例:@miko 繼續\r\n這個功能是為了延續miko沒說完的話\r\n\n3.@miko+空格+總結\r\n例:@miko 總結\r\n這個功能是為了總結對話的內容";
+                    ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                    {
+                        ReplyToken = eventObject.ReplyToken,
+                        Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = result}
+                                    }
+                    };
+                    ReplyMessage(replyMessage1);
+                    return;
+                }
+                if (userResponse.Contains("@miko 總結") && loadresponse.Count != 0 && loadresponse[0].isContinue == "Y")
+                {
+                    Console.WriteLine("進到總結了");
+                    string userInput = userResponse;
+                    string pattern = "@miko\\s(.*)";
+                    string result = "";
+                    //過濾問題:總結
+                    MatchCollection matches = Regex.Matches(userResponse, pattern);
+                    foreach (Match match in matches)
+                    {
+                        result += match.Groups[1].Value;
+                    }
+                    Aimodel ai_model = new Aimodel();
+                    ai_model.userid = eventObject.Source.UserId;
+                    AiRecordInformationDapper aiRecord = new AiRecordInformationDapper();
+                    List<Aimodel>? promt = aiRecord.Load(ai_model);
+                    ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                    {
+                        ReplyToken = eventObject.ReplyToken,
+                        Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = promt[0].prompt.Trim()}
+                                    }
+                    };
+                    ReplyMessage(replyMessage1);
+                    aiRecord.Delete(ai_model);
+                    return;
+                }
+                if (userResponse.Contains("@miko ")&&!userResponse.Contains("@miko 繼續") && loadresponse.Count > 0)//鍵入@miko和有值
+                {
+                    aiRecordInformation.Delete(aimodelx);
+                    AiRecordInformationDapper aiRecord = new AiRecordInformationDapper();
+                    Aimodel aimodel = new Aimodel();
+                    string userInput = userResponse;
+                    string pattern = "@miko\\s(.*)";
+                    string result = "";
+                    MatchCollection matches = Regex.Matches(userResponse, pattern);
+
+                    foreach (Match match in matches)
+                    {
+                        result += match.Groups[1].Value;
+                    }
+
+                    string result2 = await Chatgpt(result);
+                    Task.Delay(1000);
+
+                    Aimodel ai_model = new Aimodel();
+                    ai_model.userid = eventObject.Source.UserId;
+                    ai_model.prompt = result2;
+                    ai_model.createtime = DateTime.Now;
+                    ai_model.isContinue = "Y";
+
+                    aiRecordInformation.Create(ai_model);
+                    ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                    {
+                        ReplyToken = eventObject.ReplyToken,
+                        Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = result2}
+                                    }
+                    };
+                    ReplyMessage(replyMessage1);
+                }
+                if (userResponse.Contains("@miko ")&& loadresponse.Count==0)//鍵入@miko和空值
+                {
+                    AiRecordInformationDapper aiRecord = new AiRecordInformationDapper();
+                    Aimodel aimodel = new Aimodel();
+                    string userInput = userResponse;
+                    string pattern = "@miko\\s(.*)";
+                    string result = "";
+                    MatchCollection matches = Regex.Matches(userResponse, pattern);
+
+                    foreach (Match match in matches)
+                    {
+                        result += match.Groups[1].Value;
+                    }
+
+                    string result2 = await Chatgpt(result);
+                    Task.Delay(1000);
+                   
+                    Aimodel ai_model = new Aimodel();
+                    ai_model.userid = eventObject.Source.UserId;
+                    ai_model.prompt = result2;
+                    ai_model.createtime = DateTime.Now;
+                    ai_model.isContinue = "Y";
+
+                    aiRecordInformation.Create(ai_model);
+                    ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                    {
+                        ReplyToken = eventObject.ReplyToken,
+                        Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = result2}
+                                    }
+                    };
+                    ReplyMessage(replyMessage1);
+
+                }
+                else if (userResponse.Contains("@miko 繼續") && loadresponse.Count != 0 && loadresponse[0].isContinue=="Y")
+                {
+                    string userInput = userResponse;
+                    string pattern = "@miko\\s(.*)";
+                    string result = "";
+                    MatchCollection matches = Regex.Matches(userResponse, pattern);
+
+                    foreach (Match match in matches)
+                    {
+                        result += match.Groups[1].Value;
+                    }
+                    Aimodel ai_model = new Aimodel();
+                    ai_model.userid = eventObject.Source.UserId;
+                    AiRecordInformationDapper aiRecord = new AiRecordInformationDapper();
+                    List<Aimodel>? promt = aiRecord.Load(ai_model);
+                    string result2 = await Chatgpt(promt[0].prompt+ "\n" + result);
+                    Task.Delay(1000);
+              
+                    ai_model.prompt = promt[0].prompt+"\n"+result2;
+                    ai_model.ongoingtime = DateTime.Now;
+                    ai_model.isContinue = "Y";
+                    
+                    aiRecord.Update(ai_model);
+                    ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                    {
+                        ReplyToken = eventObject.ReplyToken,
+                        Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = result2}
+                                    }
+                    };
+                    ReplyMessage(replyMessage1);
+                }
+
+                else if (userResponse.Contains("@miko 停止"))
+                {
+                    string userInput = userResponse;
+                    string pattern = "@miko\\s(.*)";
+                    string result = "";
+                    MatchCollection matches = Regex.Matches(userResponse, pattern);
+
+                    foreach (Match match in matches)
+                    {
+                        result += match.Groups[1].Value;
+                    }
+
+                    AiRecordInformationDapper aiRecord = new AiRecordInformationDapper();
+                    aiRecord.DeleteALL();
+                    ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                    {
+                        ReplyToken = eventObject.ReplyToken,
+                        Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = "ChaptGPT之紀錄已格式化"}
+                                    }
+                    };
+                    ReplyMessage(replyMessage1);
+                }
+
+                #endregion
+
+            }
+        }
+        public async Task<string> Chatgpt(string promt)
+        {
+            string Path = "https://api.openai.com/v1/completions";
+            AiClass aiClass = new AiClass()
+            {
+                model = "text-davinci-003",
+                prompt = promt,
+                max_tokens = 300,
+                temperature = 0.7
+            };
+            string json = JsonConvert.SerializeObject(aiClass);
+            HttpContent contentPost = new StringContent(json, Encoding.UTF8, "application/json");
+            HttpClient client = new HttpClient() { BaseAddress = new Uri(Path) };
+            client.DefaultRequestHeaders.Add("authorization", "Bearer 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");
+            HttpResponseMessage response = await client.PostAsync(Path, contentPost);
+            Airesponse? result = JsonConvert.DeserializeObject<Airesponse>(response.Content.ReadAsStringAsync().GetAwaiter().GetResult());
+            try
+            {
+                Console.WriteLine($"回呼chatgpt成功:{result.choices[0].text.Trim()}");
+                return result.choices[0].text.Trim();
+                
+            }
+            catch (Exception ex)
+            {
+                return $"回呼chatgpt失敗錯誤代碼:{ex.Message}";
             }
         }
 
@@ -724,7 +934,7 @@ namespace LineBotMessage.Domain
 
         }
 
- 
+
         public bool JudgeExsitLog()
         {
             string filePath = "/app/data/status.txt";
@@ -866,7 +1076,7 @@ namespace LineBotMessage.Domain
                 {
 
                     string TitleContent = "";
-                    if (xName.Name.Length  > 30) { TitleContent = xName.Name.Substring(0, 30); }
+                    if (xName.Name.Length > 30) { TitleContent = xName.Name.Substring(0, 30); }
                     else { TitleContent = xName.Name; }
 
                     const string apiKey = "8049b67d654d48f19130d93f9b7c1017";
@@ -897,7 +1107,7 @@ namespace LineBotMessage.Domain
                             CarouselColumnObjectDto? carouselColumnObject = new CarouselColumnObjectDto();
                             //carouselColumnObject.ThumbnailImageUrl = data.value[0].thumbnailUrl;
                             carouselColumnObject.ThumbnailImageUrl = image.thumbnailUrl;
-                            carouselColumnObject.Title = "店名: "+ TitleContent;
+                            carouselColumnObject.Title = "店名: " + TitleContent;
                             //carouselColumnObject.Text = data.value[0].name;
                             carouselColumnObject.Text = TextContent;
                             carouselColumnObject.Actions = new List<ActionDto>();
