@@ -32,6 +32,7 @@ using static System.Collections.Specialized.BitVector32;
 using LineBotMessage.Dtos.Webhook;
 using System.Text.RegularExpressions;
 using System.Formats.Asn1;
+using FlickrNet;
 
 namespace LineBotMessage.Domain
 {
@@ -202,9 +203,56 @@ namespace LineBotMessage.Domain
                 }
             }
         }
+        public async Task<bool> Recordlinemsg(string GroupID,string UserID,string msg)
+        {
+            string token = "";
+            string Path = $"https://api.line.me/v2/bot/group/{GroupID}/member/{UserID}";
+            HttpClient client = new HttpClient() { BaseAddress = new Uri(Path) };
+            client.DefaultRequestHeaders.Add("authorization", "Bearer MRCN4reN9kDFdAEfp3DqyGp44Y0i2dWWazOHrcD3HqYtJWw5tlQ9iYEMvfKVZp7bIAtDAqjM0tZeYz226ubO0FotH6ajjfXmOaRkZPD4YF0/TA8sVqVy/jKAjXuBdzdsGt4Yz510nIXssnOaJK00cgdB04t89/1O/w1cDnyilFU=");
+            HttpResponseMessage response = await client.GetAsync(Path);
+            LineProfile? res = JsonConvert.DeserializeObject<LineProfile>(response.Content.ReadAsStringAsync().GetAwaiter().GetResult());
+            try
+            {
+                Console.WriteLine($"呼叫api_lineprofile成功，名子為:{res.displayName}");
+                filetxtrecord(GroupID, res,msg);
+                return true;
 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"呼叫api_lineprofile失敗，錯誤代碼:{ex.Message}");
+                return false;
+            }
+        }
+        public void filetxtrecord(string groupid,LineProfile lineProfile,string msg)
+        {
+            string path = $"/app/data/{groupid}";
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            DateTime currentTime = DateTime.Now.AddHours(8);
+            string formattedTime = currentTime.ToString("yyyyMMdd HH:mm");
+            string txtNameTime = currentTime.ToString("yyyyMMdd");
+            string content = "[" + formattedTime + "]" + $"{lineProfile.displayName}:" + msg;
+            string filePath = $"/app/data/{groupid}/{txtNameTime}.txt";
+            if (File.Exists(filePath))
+            {
+                content = "\n" + content;
+                File.AppendAllText(filePath, content);
+            }
+            else
+            {
+                File.AppendAllText(filePath, content);
+            }
+
+        }
         private async Task ReceiveMessageWebhookEvent(WebhookEventDto eventObject)
         {
+            Console.WriteLine($"GroupID:{eventObject.Source.GroupId}");
+            Console.WriteLine($"UserID:{eventObject.Source.UserId}");
+
             ReplyMessageRequestDto<TextMessageDto> replyMessage = new ReplyMessageRequestDto<TextMessageDto>();
             replyMessage.ReplyToken = eventObject.ReplyToken;
             replyMessage.Messages = new List<TextMessageDto>();
@@ -229,6 +277,8 @@ namespace LineBotMessage.Domain
 
             if (eventObject.Message.Text != "" && eventObject.Message.Text != null)
             {
+           
+
                 string filePath = "/app/data/status.txt";
 
                 #region 當使用者鍵入"天氣"Carousel 型態
@@ -539,8 +589,88 @@ namespace LineBotMessage.Domain
                 aimodelx.userid = xuserid;
                 AiRecordInformationDapper aiRecordInformation = new AiRecordInformationDapper();
                 List<Aimodel>? loadresponse = aiRecordInformation.Load(aimodelx);
-                var userResponse = eventObject.Message.Text.Trim();
-                if (userResponse.Contains("@miko h"))
+                string? userResponse = eventObject.Message.Text.Trim();
+                if (userResponse == "@miko killsumall")
+                {
+                    string filePathx = $"/app/data/{eventObject.Source.GroupId}";
+                    try
+                    {
+                        Directory.Delete(filePathx, true);
+                        Console.WriteLine($"GroupId:{eventObject.Source.GroupId}刪除成功");
+                        ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                        {
+                            ReplyToken = eventObject.ReplyToken,
+                            Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = "已刪除今天的說話紀錄"}
+                                    }
+                        };
+                        ReplyMessage(replyMessage1);
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine($"GroupId:{eventObject.Source.GroupId}刪除失敗:今天還沒有人說話喔");
+                        ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                        {
+                            ReplyToken = eventObject.ReplyToken,
+                            Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = "刪除失敗:今天還沒有人說話喔"}
+                                    }
+                        };
+                        ReplyMessage(replyMessage1);
+                    }
+                    return;
+                }
+      
+                if (userResponse == "@miko sumall")
+                {
+                    DateTime currentTime = DateTime.Now.AddHours(8);
+                    string formattedTime = currentTime.ToString("yyyyMMdd HH:mm");
+                    string txtNameTime = currentTime.ToString("yyyyMMdd");
+
+                    string filePathx = $"/app/data/{eventObject.Source.GroupId}/{txtNameTime}.txt";
+
+                    if (File.Exists(filePathx))
+                    {
+                        string text = File.ReadAllText(filePathx);
+                        Console.WriteLine("File found!: {0}", text);
+                        string result2 = await Chatgpt(text + " 請用繁體中文根據時間點總結一下上面的聊天內容。 ");
+                        Task.Delay(1000);
+
+                        ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                        {
+                            ReplyToken = eventObject.ReplyToken,
+                            Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = result2}
+                                    }
+                        };
+                        ReplyMessage(replyMessage1);
+                    }
+                    else
+                    {
+                        Console.WriteLine("File not found!");
+                        ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
+                        {
+                            ReplyToken = eventObject.ReplyToken,
+                            Messages = new List<TextMessageDto>
+                                    {
+                                        new TextMessageDto(){Text = "今天還沒有人講話喔"}
+                                    }
+                        };
+                        ReplyMessage(replyMessage1);
+                    }
+                    return;
+                }
+
+                #region 紀錄群組聊天
+
+                Recordlinemsg(eventObject.Source.GroupId, eventObject.Source.UserId, eventObject.Message.Text);
+
+                #endregion
+
+                if (userResponse=="@miko h")
                 {
                     string result = "1.@miko+空格+敘述問題\r\n例:@miko 今天要幹嘛\r\n\n2.@miko+空格+繼續\n例:@miko 繼續\r\n這個功能是為了延續miko沒說完的話\r\n\n3.@miko+空格+總結\r\n例:@miko 總結\r\n這個功能是為了總結對話的內容";
                     ReplyMessageRequestDto<TextMessageDto>? replyMessage1 = new ReplyMessageRequestDto<TextMessageDto>()
@@ -597,7 +727,7 @@ namespace LineBotMessage.Domain
                         result += match.Groups[1].Value;
                     }
 
-                    string result2 = await Chatgpt(result);
+                    string result2 = await Chatgpt(result + "Reply in 繁體中文");
                     Task.Delay(1000);
 
                     Aimodel ai_model = new Aimodel();
@@ -631,7 +761,7 @@ namespace LineBotMessage.Domain
                         result += match.Groups[1].Value;
                     }
 
-                    string result2 = await Chatgpt(result);
+                    string result2 = await Chatgpt(result + "Reply in 繁體中文");
                     Task.Delay(1000);
                    
                     Aimodel ai_model = new Aimodel();
@@ -667,7 +797,7 @@ namespace LineBotMessage.Domain
                     ai_model.userid = eventObject.Source.UserId;
                     AiRecordInformationDapper aiRecord = new AiRecordInformationDapper();
                     List<Aimodel>? promt = aiRecord.Load(ai_model);
-                    string result2 = await Chatgpt(promt[0].prompt+ "\n" + result);
+                    string result2 = await Chatgpt(promt[0].prompt+ "\n" + result + "Reply in 繁體中文");
                     Task.Delay(1000);
               
                     ai_model.prompt = promt[0].prompt+"\n"+result2;
@@ -715,6 +845,7 @@ namespace LineBotMessage.Domain
 
             }
         }
+        #region chatgpt
         public async Task<string> Chatgpt(string promt)
         {
             string Path = "https://api.openai.com/v1/completions";
@@ -722,13 +853,16 @@ namespace LineBotMessage.Domain
             {
                 model = "text-davinci-003",
                 prompt = promt,
-                max_tokens = 300,
-                temperature = 0.7
+                max_tokens = 800,
+                temperature = 0.5,
+                top_p=1,
+                frequency_penalty=0.0,
+                presence_penalty=0.6
             };
             string json = JsonConvert.SerializeObject(aiClass);
             HttpContent contentPost = new StringContent(json, Encoding.UTF8, "application/json");
             HttpClient client = new HttpClient() { BaseAddress = new Uri(Path) };
-            client.DefaultRequestHeaders.Add("authorization", "Bearer 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");
+            client.DefaultRequestHeaders.Add("authorization", "Bearer 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");
             HttpResponseMessage response = await client.PostAsync(Path, contentPost);
             Airesponse? result = JsonConvert.DeserializeObject<Airesponse>(response.Content.ReadAsStringAsync().GetAwaiter().GetResult());
             try
@@ -742,6 +876,7 @@ namespace LineBotMessage.Domain
                 return $"回呼chatgpt失敗錯誤代碼:{ex.Message}";
             }
         }
+        #endregion
 
         public async void ReplyMessage<T>(ReplyMessageRequestDto<T> request)
         {
@@ -768,6 +903,7 @@ namespace LineBotMessage.Domain
 
         }
 
+        #region 點餐流程
         public void OrderFoodPhase1(string userID, string mealtype, string step)
         {
             Console.WriteLine("進到OrderFoodPhase1");
@@ -910,8 +1046,7 @@ namespace LineBotMessage.Domain
 
 
         }
-
-
+        
         public void stop()
         {
             string filePath = "/app/data/status.txt";
@@ -919,7 +1054,7 @@ namespace LineBotMessage.Domain
             UserRecordInformationDapper userRecord = new UserRecordInformationDapper();
             userRecord.Delete();
         }
- 
+      
         public bool JudgeExsitLog()
         {
             string filePath = "/app/data/status.txt";
@@ -948,6 +1083,7 @@ namespace LineBotMessage.Domain
                 return false;
             }
         }
+        #endregion
 
         #region 文字天氣
         //static async Task<string> GetWeather()
@@ -1049,6 +1185,8 @@ namespace LineBotMessage.Domain
 
         }
         #endregion
+
+        #region 查詢bing圖片api
         public static async Task<List<TemplateMessageDto<CarouselTemplateDto>>> bingCarousel(List<Place> name)
         {
             try
@@ -1127,6 +1265,8 @@ namespace LineBotMessage.Domain
             }
 
         }
+        #endregion
+
     }
 }
 
