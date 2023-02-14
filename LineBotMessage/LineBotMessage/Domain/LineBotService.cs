@@ -33,6 +33,7 @@ using LineBotMessage.Dtos.Webhook;
 using System.Text.RegularExpressions;
 using System.Formats.Asn1;
 using FlickrNet;
+using Microsoft.VisualBasic;
 
 namespace LineBotMessage.Domain
 {
@@ -843,8 +844,34 @@ namespace LineBotMessage.Domain
 
                 #endregion
 
-            }
-        }
+                #region 測試Flex message
+                if (eventObject.Message.Text.Trim()=="flex")
+                {
+                    ReplyMessageRequestDto<FlexMessageDto<FlexBubbleContainerDto>>? replyMessage1 = new ReplyMessageRequestDto<FlexMessageDto<FlexBubbleContainerDto>>();
+					replyMessage1.ReplyToken = eventObject.ReplyToken;
+					FlexBubbleContainerDto flexBubbleContainer = new FlexBubbleContainerDto()
+                    {
+                        Type= "bubble",
+						Size= "giga",
+                        Direction= "ltr",
+
+
+					};
+
+
+					FlexMessageDto<FlexBubbleContainerDto> flexMessage = new FlexMessageDto<FlexBubbleContainerDto>()
+                    {
+                        Type = "flex",
+                        AltText = "This is flex message",
+						Contents
+
+					};
+        
+					ReplyMessage(replyMessage1);
+				}
+				#endregion
+			}
+		}
         #region chatgpt
         public async Task<string> Chatgpt(string promt)
         {

@@ -59,5 +59,10 @@
         public const string Cover = "cover";
         public const string Contain = "contain";
     }
+	public static class FlexContainerTypeEnum
+	{
+		public const string Bubble = "bubble";
+		public const string Carousel = "carousel";
+	}
 }
 
