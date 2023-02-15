@@ -1,0 +1,140 @@
+{
+  "type": "bubble",
+  "size": "giga",
+  "direction": "ltr",
+  "header": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "七天內最低價!!!!",
+        "size": "35px",
+        "color": "#EA0000",
+        "style": "normal",
+        "weight": "bold",
+        "align": "center"
+      }
+    ]
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [],
+        "position": "absolute",
+        "background": {
+          "type": "linearGradient",
+          "angle": "0deg",
+          "endColor": "#00000000",
+          "startColor": "#00000099"
+        },
+        "width": "100%",
+        "height": "40%",
+        "offsetBottom": "0px",
+        "offsetStart": "0px",
+        "offsetEnd": "0px"
+      },
+      {
+        "type": "box",
+        "layout": "horizontal",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "本日台灣銀行賣出價格",
+                    "size": "xl",
+                    "color": "#ffffff",
+                    "weight": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "box",
+                "layout": "baseline",
+                "contents": [],
+                "spacing": "xs"
+              },
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "box",
+                    "layout": "baseline",
+                    "contents": [
+                      {
+                        "type": "text",
+                        "text": "NT$0.2315",
+                        "color": "#ffffff",
+                        "size": "md",
+                        "flex": 0,
+                        "align": "end"
+                      },
+                      {
+                        "type": "text",
+                        "text": "2/13:0.2214 - 2/12:0.2114"
+                      }
+                    ],
+                    "flex": 0,
+                    "spacing": "lg"
+                  }
+                ]
+              }
+            ],
+            "spacing": "xs"
+          }
+        ],
+        "position": "absolute",
+        "offsetBottom": "0px",
+        "offsetStart": "0px",
+        "offsetEnd": "0px",
+        "paddingAll": "20px",
+        "justifyContent": "center"
+      },
+      {
+        "type": "image",
+        "url": "https://i.ibb.co/wJmdc6j/image.jpg",
+        "size": "full",
+        "aspectMode": "fit",
+        "aspectRatio": "1:1",
+        "gravity": "center",
+        "position": "relative",
+        "margin": "lg",
+        "align": "start"
+      }
+    ],
+    "paddingAll": "30px",
+    "position": "relative",
+    "borderColor": "#FF1C1C",
+    "backgroundColor": "#FFBB77",
+    "paddingTop": "5px",
+    "background": {
+      "type": "linearGradient",
+      "angle": "0deg",
+      "startColor": "#DDDddd",
+      "endColor": "#FFFFDF"
+    }
+  },
+  "styles": {
+    "header": {
+      "separator": false,
+      "backgroundColor": "#FFFFB5",
+      "separatorColor": "#FFFFB5"
+    },
+    "footer": {
+      "backgroundColor": "#dddddd",
+      "separator": true
+    }
+  }
+}

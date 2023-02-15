@@ -10,7 +10,7 @@ namespace LineBotMessage.Dtos.Messages
 
 		public string AltText { get; set; }
 		//public T Contents { get; set; }
-		public string Contents { get; set; }
+		public T Contents { get; set; }
 	}
 	public class FlexBubbleContainerDto
 	{
