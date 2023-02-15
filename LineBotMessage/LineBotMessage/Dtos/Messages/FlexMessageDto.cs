@@ -94,7 +94,6 @@ namespace LineBotMessage.Dtos.Messages
 	}
 	public class FlexBackgroundDto
 	{
-
 		public string? Type { get; set; }
 		public string? Angle { get; set; }
 		public string? StartColor { get; set; }

@@ -40,45 +40,6 @@ namespace LineBotMessage.Domain
 {
 	public class LineBotService
 	{
-		public class Action
-		{
-			public string type { get; set; }
-			public string label { get; set; }
-			public string text { get; set; }
-		}
-
-		public class Body
-		{
-			public string type { get; set; }
-			public string layout { get; set; }
-			public List<object> contents { get; set; }
-		}
-
-		public class Content
-		{
-			public string type { get; set; }
-			public string style { get; set; }
-			public string height { get; set; }
-			public Action action { get; set; }
-		}
-
-		public class Footer
-		{
-			public string type { get; set; }
-			public string layout { get; set; }
-			public string spacing { get; set; }
-			public List<Content> contents { get; set; }
-			public int flex { get; set; }
-		}
-
-		public class Root
-		{
-			public string type { get; set; }
-			public Body body { get; set; }
-			public Footer footer { get; set; }
-		}
-
-
 		// 貼上 messaging api channel 中的 accessToken & secret
 		private readonly string channelAccessToken = "MRCN4reN9kDFdAEfp3DqyGp44Y0i2dWWazOHrcD3HqYtJWw5tlQ9iYEMvfKVZp7bIAtDAqjM0tZeYz226ubO0FotH6ajjfXmOaRkZPD4YF0/TA8sVqVy/jKAjXuBdzdsGt4Yz510nIXssnOaJK00cgdB04t89/1O/w1cDnyilFU=";
 		private readonly string channelSecret = "c9a0ee25cc2d021320c0765b0dbb2cc6";
@@ -889,9 +850,138 @@ namespace LineBotMessage.Domain
 				{
 					try
 					{
-						RootFlexMessageDto rootFlexMessage = new RootFlexMessageDto();
+						string result = @"{
+  ""type"": ""bubble"",
+  ""header"": {
+    ""type"": ""box"",
+    ""layout"": ""vertical"",
+    ""contents"": [
+      {
+        ""type"": ""text"",
+        ""text"": ""header""
+      }
+    ]
+  },
+  ""hero"": {
+    ""type"": ""image"",
+    ""url"": ""https://example.com/flex/images/image.jpg"",
+    ""size"": ""full"",
+    ""aspectRatio"": ""2:1""
+  },
+  ""body"": {
+    ""type"": ""box"",
+    ""layout"": ""vertical"",
+    ""contents"": [
+      {
+        ""type"": ""text"",
+        ""text"": ""body""
+      }
+    ]
+  },
+  ""footer"": {
+    ""type"": ""box"",
+    ""layout"": ""vertical"",
+    ""contents"": [
+      {
+        ""type"": ""text"",
+        ""text"": ""footer""
+      }
+    ]
+  },
+  ""styles"": {
+    ""header"": {
+      ""backgroundColor"": ""#ffaaaa""
+    },
+    ""body"": {
+      ""backgroundColor"": ""#aaffaa""
+    },
+    ""footer"": {
+      ""backgroundColor"": ""#aaaaff""
+    }
+  }
+}";
 
+						#region 用型別的方式 失敗
+						ReplyMessageRequestDto<RootFlexMessageDto>? replyMessage1 = new ReplyMessageRequestDto<RootFlexMessageDto>()
+						{
+							ReplyToken = eventObject.ReplyToken,
+							Messages = new List<RootFlexMessageDto>
+							{
+								new RootFlexMessageDto()
+								{
+									  type="bubble",
+									  header= new Header()
+									  {
+										  type="box",
+										  layout="vertical",
+										  contents= new List<Content>()
+										  {
+											  new Content()
+											  {
+												  type="text",
+												  text ="header"
+											  }
+										  }
+									  },
+									  hero= new Hero()
+									  {
+										  type="image",
+										  url="https://example.com/flex/images/image.jpg",
+										  size="full",
+										  aspectRatio="2:1"
+									  },
+									  body= new Body()
+									  {
+										  type="box",
+										  layout="vertical",
+										  contents=new List<Content>
+										  {
+											  new Content()
+											  {
+												  type="text",
+												  text="body"
+											  }
+										  }
+									  },
+									  footer= new Footer()
+									  {
+										  type="box",
+										  layout="vertical",
+										  contents=new List<Content>
+										  {
+											 new Content()
+											 {
+												 type= "text",
+												 text="body"
+											 }
+										  }
+									  },
+									  styles= new Styles()
+									  {
+										  header= new Header()
+										  {
+											  backgroundColor="#ffaaaa"
+										  },
+										  body=new Body() 
+										  {
+											  backgroundColor="#aaffaa"
+										  },
+										  footer=new Footer()
+										  {
+											  backgroundColor="#aaaaff"
+										  }
+									  }
 
+								} 
+							}
+						};
+						#endregion
+						ReplyMessageRequestDto2<RootFlexMessageDto> replyMessage2 = new ReplyMessageRequestDto2<RootFlexMessageDto>()
+						{
+							ReplyToken = eventObject.ReplyToken,
+							Messages = result
+						};
+						ReplyMessage(replyMessage2);
 					}
 					catch(Exception ex)
 					{
@@ -953,7 +1043,7 @@ namespace LineBotMessage.Domain
 				};
 
 				HttpResponseMessage response = await client.SendAsync(requestMessage);
-				//Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
+				Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
 			}
 			catch (Exception ex)
 			{
@@ -961,7 +1051,31 @@ namespace LineBotMessage.Domain
 			}
 
 		}
+		public async void ReplyMessage<T>(ReplyMessageRequestDto2<T> request)
+		{
 
+			try
+			{
+				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+				client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", channelAccessToken); //帶入 channel access token
+				string? json = _jsonProvider.Serialize(request);
+				Console.WriteLine("最後序列化的{0}", json);
+				HttpRequestMessage? requestMessage = new HttpRequestMessage
+				{
+					Method = HttpMethod.Post,
+					RequestUri = new Uri(replyMessageUri),
+					Content = new StringContent(json, Encoding.UTF8, "application/json")
+				};
+
+				HttpResponseMessage response = await client.SendAsync(requestMessage);
+				Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("回復訊息失敗!\n" + ex.ToString());
+			}
+
+		}
 		#region 點餐流程
 		public void OrderFoodPhase1(string userID, string mealtype, string step)
 		{
