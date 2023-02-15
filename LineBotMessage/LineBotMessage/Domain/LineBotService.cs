@@ -1051,31 +1051,6 @@ namespace LineBotMessage.Domain
 			}
 
 		}
-		public async void ReplyMessage<T>(ReplyMessageRequestDto2<T> request)
-		{
-
-			try
-			{
-				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-				client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", channelAccessToken); //帶入 channel access token
-				string? json = _jsonProvider.Serialize(request);
-				Console.WriteLine("最後序列化的{0}", json);
-				HttpRequestMessage? requestMessage = new HttpRequestMessage
-				{
-					Method = HttpMethod.Post,
-					RequestUri = new Uri(replyMessageUri),
-					Content = new StringContent(json, Encoding.UTF8, "application/json")
-				};
-
-				HttpResponseMessage response = await client.SendAsync(requestMessage);
-				Console.WriteLine($"response.IsSuccessStatusCode = {response.IsSuccessStatusCode}");
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("回復訊息失敗!\n" + ex.ToString());
-			}
-
-		}
 		#region 點餐流程
 		public void OrderFoodPhase1(string userID, string mealtype, string step)
 		{
