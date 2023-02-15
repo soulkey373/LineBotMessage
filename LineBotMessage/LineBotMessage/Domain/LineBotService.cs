@@ -981,7 +981,7 @@ namespace LineBotMessage.Domain
 							ReplyToken = eventObject.ReplyToken,
 							Messages = result
 						};
-						ReplyMessage(replyMessage2);
+						Console.WriteLine("eventObject.ReplyToken{0}", eventObject.ReplyToken);
 					}
 					catch(Exception ex)
 					{
