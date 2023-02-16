@@ -35,6 +35,7 @@ using System.Formats.Asn1;
 using FlickrNet;
 using Microsoft.VisualBasic;
 using System.Reflection;
+using System.Linq;
 
 namespace LineBotMessage.Domain
 {
@@ -846,14 +847,49 @@ namespace LineBotMessage.Domain
 
 
 				#region 測試Flex message
-				if (eventObject.Message.Text.Trim() == "flex")
+				if (eventObject.Message.Text.Trim() == "!日幣" || eventObject.Message.Text.Trim() == "！日幣")
 				{
 					try
 					{
+						#region 爬蟲
+						string headerTitle = "";
+						var web = new HtmlWeb();
+						var doc = web.Load("https://rate.bot.com.tw/xrt/quote/ltm/JPY");
 
+						var rows = doc.DocumentNode.Descendants("tr")
+							.Where(tr => tr.Descendants("td").Count() >= 3)
+							.ToList()
+							.Take(7);
+						Dictionary<string, string>? dict = new Dictionary<string, string>();
+						foreach (var row in rows)
+						{
+							var date = row.Descendants("td").ElementAt(0).InnerText.Trim();
+							var rate = row.Descendants("td").ElementAt(5).InnerText.Trim();
+
+							dict[date] = rate;
+						}
+						string todayValue = dict.Values.First();
+						string minValue = dict.Values.Min();
+						if(todayValue== minValue) { headerTitle = "七日內最低價!"; }
+						else { headerTitle = "今天價格普通"; }
+						//foreach (KeyValuePair<string, string> kvp in dict)
+						//{
+						//	if (kvp.Value == minValue)
+						//	{
+						//		headerTitle = "七日內日幣最低價!";
+
+						//	}
+						//	else
+						//	{
+						//		headerTitle = "今天價格沒啥特別";
+						//	}
+
+						//}
+						todayValue = "NT$ " + todayValue;
+						#endregion
 
 						#region 用型別的方式 
-						string headerResult = "12345";
+
 						ReplyMessageRequestDto<FlexMessageDto<FlexBubbleContainerDto>>? replyMessage1 = new ReplyMessageRequestDto<FlexMessageDto<FlexBubbleContainerDto>>()
 						{
 							ReplyToken = eventObject.ReplyToken,
@@ -877,7 +913,7 @@ namespace LineBotMessage.Domain
 												new FlexComponentDto()
 												{
 													type="text",
-													text=headerResult,
+													text=headerTitle,
 													size="45px",
 													color="#EA0000",
 													style="normal",
@@ -959,7 +995,7 @@ namespace LineBotMessage.Domain
 																			   new FlexComponentDto()
 																			   {
 																				   type="text",
-																				   text="NT$0.2315",
+																				   text=todayValue,
 																				   color="#227700",
 																				   size="xxl",
 																				   flex=0,
