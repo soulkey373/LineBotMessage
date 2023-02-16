@@ -850,138 +850,188 @@ namespace LineBotMessage.Domain
 				{
 					try
 					{
-						string result = @"{
-  ""type"": ""bubble"",
-  ""header"": {
-    ""type"": ""box"",
-    ""layout"": ""vertical"",
-    ""contents"": [
-      {
-        ""type"": ""text"",
-        ""text"": ""header""
-      }
-    ]
-  },
-  ""hero"": {
-    ""type"": ""image"",
-    ""url"": ""https://example.com/flex/images/image.jpg"",
-    ""size"": ""full"",
-    ""aspectRatio"": ""2:1""
-  },
-  ""body"": {
-    ""type"": ""box"",
-    ""layout"": ""vertical"",
-    ""contents"": [
-      {
-        ""type"": ""text"",
-        ""text"": ""body""
-      }
-    ]
-  },
-  ""footer"": {
-    ""type"": ""box"",
-    ""layout"": ""vertical"",
-    ""contents"": [
-      {
-        ""type"": ""text"",
-        ""text"": ""footer""
-      }
-    ]
-  },
-  ""styles"": {
-    ""header"": {
-      ""backgroundColor"": ""#ffaaaa""
-    },
-    ""body"": {
-      ""backgroundColor"": ""#aaffaa""
-    },
-    ""footer"": {
-      ""backgroundColor"": ""#aaaaff""
-    }
-  }
-}";
 
-						#region 用型別的方式 失敗
-						ReplyMessageRequestDto<RootFlexMessageDto>? replyMessage1 = new ReplyMessageRequestDto<RootFlexMessageDto>()
+
+						#region 用型別的方式 
+						string headerResult = "12345";
+						ReplyMessageRequestDto<FlexMessageDto<FlexBubbleContainerDto>>? replyMessage1 = new ReplyMessageRequestDto<FlexMessageDto<FlexBubbleContainerDto>>()
 						{
 							ReplyToken = eventObject.ReplyToken,
-							Messages = new List<RootFlexMessageDto>
+							Messages = new List<FlexMessageDto<FlexBubbleContainerDto>>()
 							{
-								new RootFlexMessageDto()
+								new FlexMessageDto<FlexBubbleContainerDto>()
 								{
-									  type="bubble",
-									  header= new Header()
-									  {
-										  type="box",
-										  layout="vertical",
-										  contents= new List<Content>()
-										  {
-											  new Content()
-											  {
-												  type="text",
-												  text ="header"
-											  }
-										  }
-									  },
-									  hero= new Hero()
-									  {
-										  type="image",
-										  url="https://example.com/flex/images/image.jpg",
-										  size="full",
-										  aspectRatio="2:1"
-									  },
-									  body= new Body()
-									  {
-										  type="box",
-										  layout="vertical",
-										  contents=new List<Content>
-										  {
-											  new Content()
-											  {
-												  type="text",
-												  text="body"
-											  }
-										  }
-									  },
-									  footer= new Footer()
-									  {
-										  type="box",
-										  layout="vertical",
-										  contents=new List<Content>
-										  {
-											 new Content()
-											 {
-												 type= "text",
-												 text="body"
-											 }
-										  }
-									  },
-									  styles= new Styles()
-									  {
-										  header= new Header()
-										  {
-											  backgroundColor="#ffaaaa"
-										  },
-										  body=new Body() 
-										  {
-											  backgroundColor="#aaffaa"
-										  },
-										  footer=new Footer()
-										  {
-											  backgroundColor="#aaaaff"
-										  }
-									  }
+									Type="flex",
+									AltText ="本日-日幣價格",
+									contents=new FlexBubbleContainerDto()
+									{
+										type="bubble",
+										size="giga",
+										direction="ltr",
+										header=new FlexComponentDto()
+										{
+											type="box",
+											layout="vertical",
+											contents= new List<FlexComponentDto>()
+											{
+												new FlexComponentDto()
+												{
+													type="text",
+													text=headerResult,
+													size="45px",
+													color="#EA0000",
+													style="normal",
+													weight="bold",
+													align="center"
+												}
+											}
+										},
+										body=new FlexComponentDto()
+										{
+											type="box",
+											layout="vertical",
+											contents=new List<FlexComponentDto>()
+											{
+											   new FlexComponentDto()
+											   {
+												   type="box",
+												   layout="vertical",
+												   contents=new List<FlexComponentDto>(),
+												   position="absolute",
+												   background= new FlexBackgroundDto()
+												   {
+													   type="linearGradient",
+													   angle="0deg",
+													   endColor="#00000000",
+													   startColor="#00000099"
+												   },
+												   OffsetBottom="0px",
+												   OffsetStart="0px",
+												   OffsetEnd="0px"
+											   },
+											   new FlexComponentDto()
+											   {
+												   type="box",
+												   layout="horizontal",
+												   contents= new List<FlexComponentDto>()
+												   {
+													   new FlexComponentDto()
+													   {
+														   type="box",
+														   layout="vertical",
+														   contents= new List<FlexComponentDto>()
+														   {
+															   new FlexComponentDto()
+															   {
+																   type="box",
+																   layout="horizontal",
+																   contents= new List<FlexComponentDto>()
+																   {
+																	   new FlexComponentDto()
+																	   {
+																		   type="text",
+																		   text="本日日幣台灣銀行賣出價格!",
+																		   size="xl",
+																		   color="#0066FF",
+																		   weight="bold"
+																	   }
+																   }
+															   },
+															   new FlexComponentDto()
+															   {
+																   type="box",
+																   layout="baseline",
+																   contents=new List<FlexComponentDto>(),
+																   spacing="xs"
+															   },
+															   new FlexComponentDto()
+															   {
+																   type="box",
+																   layout="horizontal",
+																   contents=new List<FlexComponentDto>()
+																   {
+																	   new FlexComponentDto()
+																	   {
+																		   type="box",
+																		   layout="baseline",
+																		   contents=new List<FlexComponentDto>()
+																		   {
+																			   new FlexComponentDto()
+																			   {
+																				   type="text",
+																				   text="NT$0.2315",
+																				   color="#227700",
+																				   size="xxl",
+																				   flex=0,
+																				   align="end",
+																				   weight="bold"
+																			   }
+																		   },
+																		   flex=0,
+																		   spacing="lg"
 
-								} 
+																	   }
+																   }
+															   }
+														   },
+														   spacing="xs"
+													   }
+												   },
+												   position="absolute",
+												   OffsetBottom="0px",
+												   OffsetEnd="0px",
+												   paddingAll="20px",
+												   JustifyContent="center",
+												   OffsetStart="0px"
+											   },
+											   new FlexComponentDto()
+											   {
+												   type="image",
+												   url="https://i.ibb.co/wJmdc6j/image.jpg",
+												   size="full",
+												   AspectRatio="1:1",
+												   gravity="top",
+												   position="relative",
+												   margin="xs",
+												   align="start"
+											   }
+											},
+											paddingAll="20px",
+											position="relative",
+											borderColor="#FF1C1C",
+											backgroundColor="#FFBB77",
+											paddingTop="0px",
+											background= new FlexBackgroundDto()
+											{
+												type="linearGradient",
+												angle="0deg",
+												startColor="#DDDddd",
+												endColor="#FFFFDF"
+											}
+										},
+										styles= new FlexBubbleContainerStyle()
+										{
+											Header = new FlexBlockStyle()
+											{
+												separator=false,
+												backgroundColor="#FFFFB5",
+												separatorColor="#FFFFB5"
+											},
+											Footer= new FlexBlockStyle()
+											{
+												backgroundColor="#dddddd",
+												separator=true
+											}
+										}
+
+									}
+								}
 							}
 						};
+						ReplyMessage(replyMessage1);
 						#endregion
-						ReplyMessageRequestDto2<RootFlexMessageDto> replyMessage2 = new ReplyMessageRequestDto2<RootFlexMessageDto>()
-						{
-							ReplyToken = eventObject.ReplyToken,
-							Messages = result
-						};
-						Console.WriteLine("eventObject.ReplyToken{0}", eventObject.ReplyToken);
+
+						Console.WriteLine("eventObject.ReplyToken{0}\r ", eventObject.ReplyToken);
 					}
 					catch(Exception ex)
 					{
