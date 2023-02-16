@@ -872,19 +872,7 @@ namespace LineBotMessage.Domain
 						string minValue = dict.Values.Min();
 						if(todayValue== minValue) { headerTitle = "七日內最低價!"; }
 						else { headerTitle = "今天價格普通"; }
-						//foreach (KeyValuePair<string, string> kvp in dict)
-						//{
-						//	if (kvp.Value == minValue)
-						//	{
-						//		headerTitle = "七日內日幣最低價!";
 
-						//	}
-						//	else
-						//	{
-						//		headerTitle = "今天價格沒啥特別";
-						//	}
-
-						//}
 						todayValue = "NT$ " + todayValue;
 						#endregion
 
