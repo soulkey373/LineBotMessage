@@ -1084,7 +1084,7 @@ namespace LineBotMessage.Domain
 			string json = JsonConvert.SerializeObject(aiClass);
 			HttpContent contentPost = new StringContent(json, Encoding.UTF8, "application/json");
 			HttpClient client = new HttpClient() { BaseAddress = new Uri(Path) };
-			client.DefaultRequestHeaders.Add("authorization", "Bearer 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");
+			client.DefaultRequestHeaders.Add("authorization", "Bearer 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");
 			HttpResponseMessage response = await client.PostAsync(Path, contentPost);
 			Airesponse? result = JsonConvert.DeserializeObject<Airesponse>(response.Content.ReadAsStringAsync().GetAwaiter().GetResult());
 			try
